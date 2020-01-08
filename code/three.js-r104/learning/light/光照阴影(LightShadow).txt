@@ -1,0 +1,28 @@
+构造器（Constructor）
+	LightShadow( camera )
+	camera — 阴影的空间视角。
+
+属性（Properties）
+# .camera
+	阴影的空间观察视角。
+# .bias
+	在本文中出现的词汇：阴影映射、阴影贴图和Shadow Map同义。
+
+	阴影映射偏差，当决定一个曲面是否处于阴影中时，从正规化深度中增加或减少多少。
+	缺省值 — 0.
+# .radius
+	阴影半径
+	缺省值 - 0.
+# .mapSize
+	存储在一个Vector2中的阴影贴图的宽度和高度。
+	Default — ( 512, 512 ).
+# .map
+	使用内置相机生成的深度图；超出像素深度的位置是在阴影中。在渲染期间内部计算。
+# .matrix
+	在相机空间产生投影的模型，用来计算阴影贴图中的位置和深度。保存于一个Matrix4对象中。在渲染期间内部计算。
+
+方法（Methods）
+# .copy ( source )
+	把 source 的数值拷贝给这个LightShadow对象。
+# .clone ()
+	返回一个LightShadow对象的克隆。

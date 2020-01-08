@@ -1,0 +1,43 @@
+网孔（Mesh）
+	网孔对象的基类，如 MorphAnimMesh 和 蒙皮网孔(SkinnedMesh)。
+
+代码示例;
+	var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+	var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+	var mesh = new THREE.Mesh( geometry, material );
+	scene.add( mesh );
+
+构造器（Constructor）
+	Mesh( geometry, material )
+	eometry — An instance of 几何模型(Geometry).
+	material — An instance of 材料(Material) (optional).
+
+属性（Properties）
+# .geometry
+	一个 几何模型(Geometry) 实例，用来定义对象的结构。
+# .material
+	一个 材料(Material) 实例，用来定义对象的外观。缺省是一个启用线框模式和随机颜色的 基础网孔材料(MeshBasicMaterial) 。
+# .morphTargetInfluences
+	一个权重值数组，取值从0到1，指定变形程度。 默认为undefined，在调用 updateMorphTargets 方法时，会被重置为一个空数组。
+# .morphTargetDictionary
+	一种基于morphTarget.name属性的morphTargets对象词典。 默认为undefined，在调用 updateMorphTargets 方法时，会被重构。
+# .morphTargetBase
+	指定该索引处的morphTarget为基础变形。 默认为undefined，在调用 updateMorphTargets 方法时，会被重置为 -1。
+
+方法（Methods）
+# .getMorphTargetIndexByName ( name )
+	name — 一个变形标的（morph target）对象的名称。
+	返回一个给定名字的变形标的的索引。
+# .updateMorphTargets ()
+	更新 morphtargets 使其不对对象产生影响。重置 morphTargetForcedOrder, morphTargetInfluences, morphTargetDictionary, 和 morphTargetBase 属性。
+# .raycast ( raycaster, intersects )
+	得到光线投射和网孔之间的交叉点。Raycaster.intersectObject 将调用该方法。
+# .clone ()
+	返回这个网孔对象及其子对象的克隆。
+
+
+
+
+
+
+

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+    <script src="../src/libs/CameraHelper.js"></script>
+    <script src="./TransformControls.js"></script>
+
+    <script src="../src/common/math.js"></script>
+    <script src="../src/common/utils.js"></script>
+
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+        #controlwrwap{
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            margin: 10px;
+            border: 1px solid;
+            border-radius: 10px;
+            padding: 5px;
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+    <div id="controlwrwap">
+        <div style="border: 1px solid;margin: 10px;border-radius: 10px;padding: 10px;cursor: pointer;" onclick="changeMode('translate')">translate</div>
+        <div style="border: 1px solid;margin: 10px;border-radius: 10px;padding: 10px;cursor: pointer;" onclick="changeMode('rotate')">rotate</div>
+        <div style="border: 1px solid;margin: 10px;border-radius: 10px;padding: 10px;cursor: pointer;" onclick="changeMode('scale')">scale</div>
+    </div>
+</body>
+<script>
+
+    var canBeSelectedMeshes = []
+    var currentTransformController = null
+    var currentSelectedCamera = null
+    var cameraPositions = [
+        {
+            index: 1,
+            nextIndex: 2,
+            position: {
+                x: 5,
+                y: 5,
+                z: 5
+            },
+            target: {
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            duration: 1000
+        },
+        {
+            index: 2,
+            nextIndex: 3,
+            position: {
+                x: -10,
+                y: 5,
+                z: 5
+            },
+            target: {
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            duration: 1000
+        },
+        {
+            index: 3,
+            nextIndex: -1,
+            position: {
+                x: -10,
+                y: 5,
+                z: -5
+            },
+            target: {
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            duration: 1000
+        }
+    ]
+    var transformControls = null, controller
+    var normalMaterial = new THREE.MeshNormalMaterial()
+    window.onload = function(){
+        let scene = new THREE.Scene()
+        let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer({
+            antialias:true, // 开启抗锯齿处理
+            alpha:true
+        })
+        renderer.setClearColor(new THREE.Color(0xEEEEEE))
+        renderer.setSize(window.innerWidth,window.innerHeight)
+        renderer.shadowMap.enabled = true
+        let domElement = renderer.domElement
+
+        controller = new THREE.OrbitControls( camera, domElement )
+        transformControls = new THREE.TransformControls(camera, domElement)
+      
+        scene.add(transformControls)
+        camera.position.x = -30
+        camera.position.y = 40
+        camera.position.z = 30
+        camera.lookAt(scene.position)
+
+
+        var geometry = new THREE.Geometry()
+        for(var i=0;i < cameraPositions.length;i++) {
+           
+            var item = cameraPositions[i]
+
+            item.sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5,16,16), normalMaterial)
+            item.sphere.position.x = item.position.x
+            item.sphere.position.y = item.position.y
+            item.sphere.position.z = item.position.z
+            item.sphere.userData.index = item.index
+            item.sphere.isSelected = false
+            canBeSelectedMeshes.push(item.sphere)
+            scene.add(item.sphere)
+
+            item.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 5)
+            item.camera.position.x = item.position.x
+            item.camera.position.y = item.position.y
+            item.camera.position.z = item.position.z
+            
+            item.camera.lookAt(item.target.x, item.target.y, item.target.z)
+            scene.add(item.camera)
+            var helper = new THREE.CameraHelper( item.camera );
+            scene.add(helper)
+
+            if(cameraPositions.length <= 1){ // 只有一个点
+                return
+            }else if(item.nextIndex > 0){ // 不是最后一个点
+               
+                geometry = geometry.clone()
+                geometry.vertices = []
+                geometry.vertices.push(
+                    new THREE.Vector3( item.position.x, item.position.y, item.position.z ),
+                    new THREE.Vector3( cameraPositions[i+1].position.x, cameraPositions[i+1].position.y, cameraPositions[i+1].position.z )
+                );
+                var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: 0x0000ff}))
+                line.userData.index = i
+                item.nextLine = line
+
+                cameraPositions[i+1].lastLine = line
+                scene.add(line)
+            }
+            
+            
+        }
+       
+        domElement.onmousedown = function(e){
+            
+            var coords = tranformMouseCoord(e.clientX, e.clientY, domElement)
+            var intersects = getSelectedMeshes(coords, camera, canBeSelectedMeshes)
+            if(intersects.length > 0){
+               
+                var item = intersects[0].object
+                
+                // console.log(currentSelectedCamera, item.userData.index)
+                if(currentSelectedCamera == null){ // 初次选中
+                    currentSelectedCamera = item
+                    transformControls.attach(item)
+                    controller.enabled = false
+                }else if(item.userData.index == currentSelectedCamera.userData.index){ // 再次选中同一个相机
+                    // console.log(111)
+                    transformControls.detach()
+                    currentSelectedCamera = null
+                    controller.enabled = true
+                }else{  // 选中不同的相机
+                    transformControls.detach()
+                    currentSelectedCamera = item
+                    transformControls.attach(item)
+                    controller.enabled = false
+                }
+            }else{
+                if(currentSelectedCamera !== null){
+                    domElement.onmousemove = function(){
+                        var point = cameraPositions.filter(item=>{
+                            return item.index == (currentSelectedCamera.userData.index)
+                        })[0]
+                        var lastPoint = cameraPositions.filter(item=>{
+                            return item.index == (currentSelectedCamera.userData.index)
+                        })[0]
+                        var nextPoint = cameraPositions.filter(item=>{
+                            return item.index == (currentSelectedCamera.userData.index)
+                        })[0]
+
+                        var newVertices = null
+                       
+                        if(point.lastLine!==undefined){
+                            newVertices = [
+                                new THREE.Vector3( currentSelectedCamera.position.x, currentSelectedCamera.position.y, currentSelectedCamera.position.z ),
+                                new THREE.Vector3( lastPoint.position.x, lastPoint.position.y, lastPoint.position.z )
+                            ]
+                            updateLine(point.lastLine, newVertices)
+                        }
+
+                        if(point.nextLine!==undefined){
+                          
+                            newVertices = [
+                                new THREE.Vector3( currentSelectedCamera.position.x, currentSelectedCamera.position.y, currentSelectedCamera.position.z ),
+                                new THREE.Vector3( nextPoint.position.x, nextPoint.position.y, nextPoint.position.z )
+                            ]
+                            
+                            updateLine(point.nextLine, newVertices)
+                        }
+                        
+                        
+                    }
+                    domElement.onmouseup = function(ue){
+                        domElement.onmousemove = null
+                    }
+                }
+            }
+            
+        }
+
+       
+        var grid = new THREE.GridHelper( 30, 30, 0x444444, 0x888888 );
+	    scene.add( grid );
+
+        document.getElementById('WebGL-output').appendChild(domElement)
+        
+        renderScene()
+        function renderScene(){
+            renderer.render(scene,camera)
+            requestAnimationFrame(renderScene)
+        }
+        window.onresize = onResize
+        function onResize(){
+            camera.aspect = window.innerWidth / window.innerHeight
+            camera.updateProjectionMatrix()
+            renderer.setSize(window.innerWidth,window.innerHeight)
+        }
+        
+    }
+
+    function updateLine(line, newVertices){
+        for(var i = 0;i < newVertices.length;i++) {
+            line.geometry.vertices[i].x = newVertices[i].x
+            line.geometry.vertices[i].y = newVertices[i].y
+            line.geometry.vertices[i].z = newVertices[i].z
+        }
+        line.geometry.verticesNeedUpdate = true
+    }
+
+    function changeMode(mode){
+        transformControls.setMode(mode)
+    }
+    
+</script>
+</html>

@@ -1,0 +1,74 @@
+构造器（Constructor）
+	Texture( image, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy )
+
+代码示例：
+	// 加载一个纹理，设置包装模式为重复。
+	var texture = new THREE.TextureLoader().load( "textures/water.jpg" );
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	texture.repeat.set( 4, 4 );
+
+属性（Properties）
+# .id
+	此纹理实例的唯一编号。
+# .image
+	一个Image对象，通常使用 ImageUtils 或 ImageLoader 类来创建。Image对象可以包括图像 (比如 PNG, JPG, GIF, DDS), 视频 (e.g., MP4, OGG/OGV), 或者六幅图像的集合用于一个立方体贴图。 要使用视频作为一个纹理，你需要把一个HTML5视频元素作为纹理图像的源，并在视频播放时不断更新这个纹理。
+# .mapping
+	如何将图像应用到对象。默认为 UV贴图（THREE.UVMapping）类型，这里U,V 坐标用来应用映射，要求是单个纹理。 其他类型包括：立方体反射贴图（THREE.CubeReflectionMapping）, 用于立方体贴图的反射映射; 立方体折射贴图（THREE.CubeRefractionMapping）, 用于立方体贴图的折射映射; 以及球面反射贴图（THREE.SphericalReflectionMapping）, 用于球面映射。
+# .wrapS
+	缺省为 THREE.ClampToEdgeWrapping, 表示边缘被夹到纹理单元（texels）的外边界。其他两个选项是 THREE.RepeatWrapping 和 THREE.MirroredRepeatWrapping。
+# .wrapT
+	缺省为 THREE.ClampToEdgeWrapping, 表示边缘被夹到纹理单元（texels）的外边界。其他两个选项是 THREE.RepeatWrapping 和 THREE.MirroredRepeatWrapping。
+#.magFilter
+	该属性定义当一个纹理单元（texel）覆盖多个像素点时纹理如何采样。缺省为 THREE.LinearFilter，表示获取4个最近的纹理单元执行双向线性插值计算。另外的选项是 THREE.NearestFilter, 表示使用最近的texel。
+.minFilter
+该属性定义当一个纹理单元（texel）不足以覆盖单个像素点时纹理如何采样。缺省为 THREE.LinearMipMapLinearFilter, 表示使用多级纹理贴图（mipmapping）以及一个三线性滤波器。其他选项是 THREE.NearestFilter, THREE.NearestMipMapNearestFilter, THREE.NearestMipMapLinearFilter, THREE.LinearFilter, 和 THREE.LinearMipMapNearestFilter。这些选项差别在于如何选择采样点。
+# .format
+缺省纹理格式为THREE.RGBAFormat。其他格式有：THREE.AlphaFormat, THREE.RGBFormat, THREE.LuminanceFormat, 和 THREE.LuminanceAlphaFormat。 也有压缩纹理格式，如果支持S3TC扩展：THREE.RGB_S3TC_DXT1_Format, THREE.RGBA_S3TC_DXT1_Format, THREE.RGBA_S3TC_DXT3_Format, 和 THREE.RGBA_S3TC_DXT5_Format.
+# .type
+缺省类型为THREE.UnsignedByteType. 其他可用值有（WebGL所允许的）THREE.ByteType, THREE.ShortType, THREE.UnsignedShortType, THREE.IntType, THREE.UnsignedIntType, THREE.FloatType, THREE.UnsignedShort4444Type, THREE.UnsignedShort5551Type, 和 THREE.UnsignedShort565Type.
+# .anisotropy
+表示纹理的各向异性。沿纹理单元密度最高方向的轴线所取样本数。默认情况下，这个值为1。较高的值比基础MipMap要更清晰，但需要更多的采样。 使用renderer.getMaxAnisotropy()方法来找到GPU最大有效各向异性值；这个值通常是2的幂次方。
+关于各向异性的详细说明，请参阅文章：纹理基础知识和过滤模式详解
+
+# .needsUpdate
+如果在创建后修改纹理，将此标志设置为真，以便正确设置纹理。这对于设置包装模式（Wrap Mode）特别重要。
+# .repeat
+在U和V方向上，纹理在模型表面上的重复次数。
+# .offset
+在U和V方向上，纹理在模型表面上重复绘制时的偏移。通常范围是0.0 到 1.0。
+# .name
+给定纹理的名称，默认为空字符串。
+# .generateMipmaps
+是否为纹理生成多级纹理贴图（如果可以的话）。默认为真。
+# .flipY
+默认为真。翻转图像的Y轴以匹配WebGL纹理坐标空间。
+# .mipmaps
+用户指定的MipMaps数组（可选）。
+# .unpackAlignment
+默认值为4。指定内容中每个像素行起点的对齐要求。有效值有 1 (字节对齐byte-alignment), 2 (行起点按偶数字节对齐), 4 (字对齐word-alignment), 和 8（行起点按双字对齐）。参阅：glPixelStorei 以了解更多信息。
+# .premultiplyAlpha
+默认值是false，这是PNG图片的规范。如果RGB值被预乘了alpha，设置为true。
+# .encoding
+编码方式。默认设置为 THREE.LinearEncoding，但是支持 sRGB, RGBE, RGBM, RGBD, LogLuv 和 Gamma。 重要：如果纹理中的这个值在材料已用后被改变，则需要触发一个Material.needsUpdate操作，以便该值在着色器中得到实现。
+# .onUpdate
+一个回调函数，当纹理被更新时调用。（e.g., 当 needsUpdate 被设置为 true 并且该纹理已被使用）。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

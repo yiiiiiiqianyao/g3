@@ -1,0 +1,55 @@
+Canvas渲染器不使用WebGL来绘制场景，而使用相对较慢的Canvas 2D Context API。
+对于一些简单的场景，该渲染器是 WebGL渲染器(WebGLRenderer) 的一个较好的功能回退
+
+简单回退使用的代码示例：
+	function webglAvailable() {
+		try {
+			var canvas = document.createElement( 'canvas' );
+			return !!( window.WebGLRenderingContext && (
+				canvas.getContext( 'webgl' ) ||
+				canvas.getContext( 'experimental-webgl' ) )
+			);
+		} catch ( e ) {
+			return false;
+		}
+	}
+
+	if ( webglAvailable() ) {
+		renderer = new THREE.WebGLRenderer();
+	} else {
+		renderer = new THREE.CanvasRenderer();
+	}
+
+构造器（Constructor）
+	CanvasRenderer(parameters)
+	parameters是一个用来定义渲染器行为的可选对象。当没有设置该参数时，将使用默认值。
+	canvas — 一个用来绘制输出的 Canvas 对象。
+
+属性（Properties）
+# .info
+	一个关于图形板内存和渲染过程的一系列统计信息的对象。用于调试和分析。该对象包含如下字段：
+
+	render:
+		vertices
+		faces
+# .domElement
+	一个用来绘制输出的 Canvas 对象。
+	该对象通过构造函数中的渲染器所自动创建（如果没有提供的话）；你只需要将其添加到您的网页中。
+# .autoClear
+	定义渲染器是否应该在渲染之前自动清除其输出。
+# .sortObjects
+	定义渲染器是否需要对对象排序。默认是true。
+	注：排序是用来试图正确地渲染具有一定程度透明度的对象。根据定义，
+	排序对象可能在所有情况下都不工作。 根据应用程序的需要，我们可能需要关闭该排序功能，
+	而使用其他方法处理透明渲染，比如手动确定物体的绘制顺序。
+
+#.sortElements
+	定义渲染器是否应该对每个对象的面进行排序。默认是true。
+
+
+
+
+
+
+
+

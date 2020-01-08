@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+
+    <script src="../src/common/math.js"></script>
+    <script src="../src/common/utils.js"></script>
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+    <div id="sign" style="position: absolute;top: 0;left: 0;margin: 10px;border: 1px solid;border-radius:10px;padding: 10px;">
+        single (按ctrl键切换)
+    </div>
+</body>
+<script>
+    window.onload = function(){
+        let scene = new THREE.Scene()
+        let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer({
+            antialias:true, // 开启抗锯齿处理
+            alpha:true
+        })
+        renderer.setClearColor(new THREE.Color(0xeeeeee))
+        renderer.setSize(window.innerWidth,window.innerHeight)
+        renderer.shadowMap.enabled = true
+        
+        document.getElementById('WebGL-output').appendChild(renderer.domElement)
+        
+        var controller = new THREE.OrbitControls( camera, renderer.domElement )
+        camera.position.x = -30
+        camera.position.y = 40
+        camera.position.z = 30
+        camera.lookAt(scene.position)
+
+        var raycaster = new THREE.Raycaster();
+        var mouse = new THREE.Vector2();
+
+        var currentSelectedMeshs = []
+        var canBeSelectedMeshes = []
+
+        var normalMaterial = new THREE.MeshNormalMaterial()
+        var basicMaterial = new THREE.MeshBasicMaterial({color: 'red'})
+        
+        var cubeCount = 20;
+        var size = 6
+        var isMultiply = false
+
+        var grid = new THREE.GridHelper( 30, 30, 0x444444, 0x888888 );
+        scene.add( grid );
+
+        for(var i=0;i<cubeCount;i++){
+            var geo = new THREE.BoxGeometry(Math.random()*size,Math.random()*size,Math.random()*size)
+            var cube = new THREE.Mesh(geo,normalMaterial)
+            cube.position.x = -15 + Math.random()*30
+            cube.position.z = -15 + Math.random()*30
+            cube.isSelected = false
+            scene.add(cube)
+            canBeSelectedMeshes.push(cube)
+        }
+        
+       document.onkeydown = function(edown){
+            isMultiply = !isMultiply
+            document.getElementById('sign').innerText = isMultiply?'multipty':'single'
+       }
+        
+        renderer.domElement.onmousedown = function(e){
+            var coords = tranformMouseCoord(e.clientX, e.clientY, renderer.domElement);
+            var intersects = getSelectedMeshes(coords, camera, canBeSelectedMeshes);
+            var moveFlag = false
+            if(intersects.length > 0){
+                if(!isMultiply){ // multiply
+                    currentSelectedMeshs.forEach(item=>{
+                        item.isSelected = false
+                        item.material = normalMaterial
+                        item.needsUpdate = true  
+                    })
+                    currentSelectedMeshs = []
+                }
+                var item = intersects[0]
+                if(item.object.isSelected){//selected
+                    if(!isMultiply){ // multiply
+                        currentSelectedMeshs.forEach(item=>{
+                            item.isSelected = false
+                            item.material = normalMaterial
+                            item.needsUpdate = true  
+                        })
+                        currentSelectedMeshs = []
+                    }
+                    item.object.material = normalMaterial
+                }else{  // not selected
+                    // if(!isMultiply){ // multiply
+                    //     currentSelectedMeshs.forEach(item=>{
+                    //         item.isSelected = false
+                    //         item.material = normalMaterial
+                    //         item.needsUpdate = true  
+                    //     })
+                    //     currentSelectedMeshs = []
+                    // }
+                    item.object.material = basicMaterial
+                    currentSelectedMeshs.push(item.object)
+                }
+                item.object.isSelected = !item.object.isSelected;
+                item.object.needsUpdate = true 
+            }
+
+            renderer.domElement.onmousemove = function(e){
+                renderer.domElement.onmouseup = function(e){
+                }
+            }
+            renderer.domElement.onmouseup = function(e){
+                if(intersects.length == 0){
+                    currentSelectedMeshs.forEach(item=>{
+                        item.isSelected = false
+                        item.material = normalMaterial
+                        item.needsUpdate = true  
+                    })
+                    currentSelectedMeshs = []
+                }
+            }
+            
+        }
+
+        renderScene()
+        function renderScene(){
+            renderer.render(scene,camera)
+            requestAnimationFrame(renderScene)
+        }
+        window.onresize = onResize
+        function onResize(){
+            camera.aspect = window.innerWidth / window.innerHeight
+            camera.updateProjectionMatrix()
+            renderer.setSize(window.innerWidth,window.innerHeight)
+        }
+        
+}
+    
+</script>
+</html>

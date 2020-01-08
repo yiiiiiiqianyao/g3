@@ -1,0 +1,102 @@
+该类用来处理光线投射。光线投射主要用于物体选择、碰撞检测以及图像成像等方面
+
+代码示例：
+var raycaster = new THREE.Raycaster();
+var mouse = new THREE.Vector2();
+
+function onMouseMove( event ) {
+
+	// calculate mouse position in normalized device coordinates
+	// (-1 to +1) for both components
+
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;		
+
+}
+
+function render() {
+
+	// update the picking ray with the camera and mouse position	
+	raycaster.setFromCamera( mouse, camera );	
+
+	// calculate objects intersecting the picking ray
+	var intersects = raycaster.intersectObjects( scene.children );
+
+	for ( var i = 0; i < intersects.length; i++ ) {
+
+		intersects[ i ].object.material.color.set( 0xff0000 );
+	
+	}
+	
+	renderer.render( scene, camera );
+
+}
+
+window.addEventListener( 'mousemove', onMouseMove, false );
+
+window.requestAnimationFrame(render);
+
+构造器（Constructor）
+	Raycaster( origin, direction, near, far ) {
+	origin — 光线投射的起点向量。
+	direction — 光线投射的方向向量，应该是被归一化的。
+	near — 投射近点，用来限定返回比near要远的结果。near不能为负数。缺省为0。
+	far — 投射远点，用来限定返回比far要近的结果。far不能比near要小。缺省为无穷大。
+
+属性（Properties）
+# .ray
+	用于光线投射的射线。
+# .near
+	光线投射器的近点因子，这个值指示基于这个距离哪些对象可以被舍弃。
+	这个值不能是负的，且应该小于far属性。
+# .far
+	光线投射器的远点因子，这个值指示基于这个距离哪些对象可以被舍弃。
+	这个值不能是负的，且应该大于near属性。
+	.linePrecision
+	和 线条(Line) 对象相交时的精度因子。
+
+方法（Methods）
+# .set ( origin, direction )
+	origin — 光线投射的起点向量。
+	direction — 被归一化的光线投射的方向向量。
+	用一个新的起点和方向向量来更新射线（ray）。
+# .setFromCamera ( coords, camera )
+	coords — 鼠标的二维坐标，在归一化的设备坐标(NDC)中，也就是X 和 Y 分量应该介于 -1 和 1 之间。
+	camera — 射线起点处的相机，即把射线起点设置在该相机位置处。
+	用一个新的原点和方向向量来更新射线（ray）。
+# .intersectObject ( object, recursive )
+	object — 用来检测和射线相交的物体。
+	recursive — 如果为true，它还检查所有后代。否则只检查该对象本身。缺省值为false。
+
+	检查射线和物体之间的所有交叉点（包含或不包含后代）。交叉点返回按距离排序，最接近的为第一个。 返回一个交叉点对象数组。
+	[ { distance, point, face, faceIndex, indices, object }, ... ]
+	distance – 射线的起点到相交点的距离
+	point – 在世界坐标中的交叉点
+	face – 相交的面
+	faceIndex – 相交的面的索引
+	indices – 组成相交面的顶点索引
+	object – 相交的对象
+
+	当一个网孔(Mesh)对象和一个缓存几何模型(BufferGeometry)相交时，faceIndex 将是 undefined，并且 indices 将被设置； 而当一个网孔(Mesh)对象和一个几何模型(Geometry)相交时，indices 将是 undefined。
+
+	当计算这个对象是否和射线相交时，Raycaster 把传递的对象委托给 raycast 方法。 这允许 meshes 对于光线投射的响应可以不同于 lines 和 pointclouds。
+
+	*注意*，对于网格，面（faces）必须朝向射线原点，这样才能被检测到；通过背面的射线的交叉点将不被检测到。 为了光线投射一个对象的正反两面，你得设置 material 的 side 属性为 THREE.DoubleSide。
+
+# .intersectObjects ( objects, recursive )
+	objects — 检查是否和射线相交的一组对象。
+	recursive — 如果为true，还同时检查所有的后代对象。否则只检查对象本身。缺省值为 false。
+	检查射线和对象之间的所有交叉点（包含或不包含后代）。交叉点返回按距离排序，最接近的为第一个。返回结果类似于 .intersectObject。
+
+
+
+
+
+
+
+
+
+
+
+
+

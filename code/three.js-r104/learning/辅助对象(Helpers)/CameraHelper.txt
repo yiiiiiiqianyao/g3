@@ -1,0 +1,29 @@
+The camera Helper is an Object3D which helps visualizing what a camera contains in its frustum.
+It visualizes the frustum with an line Geometry.
+
+构造器（Constructor）
+	CameraHelper(camera)
+	camera -- The camera to visualize.
+	This create a new CameraHelper for the specified camera.
+
+属性（Properties）
+# .pointMap
+	This contains the points to viualize the cameraHelper
+# .camera
+	The camera to visualize.
+
+方法（Methods）
+# .update ()
+	Updates the helper based on the projectionMatrix of the camera.
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,25 @@
+光（Light）
+	光源的基类。
+
+构造器（Constructor）
+	Light( color, intensity )
+	color — 光源颜色的RGB数值
+	intensity — 光源强度的数值。
+	这创造了一个给定颜色和强度的光源对象。
+
+属性（Properties）
+	该类继承自基类 Object3D，所以具备基类所有的通用属性。
+# .color
+	光源的颜色。
+# .intensity
+	光源的强度。
+	在“物理上正确”的模式中，颜色和强度的乘积被解析为以坎德拉（candela）为单位的发光强度。
+	缺省值 — 1.0.
+
+方法（Methods）
+	该类继承自基类 Object3D，所以具备基类所有的通用方法。
+# .copy ( source )
+
+	将 source 的值复制到这个光对象。
+# .toJSON ( meta )
+	返回JSON格式的光源数据。

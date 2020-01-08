@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>load local model</title>
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+    <script src="../src/loaders//OBJLoader.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        .btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 50px;
+            height: 30px;
+            border: 1px solid;
+            border-radius: 10px;
+            text-align: center;
+            background: #ffffff;
+            cursor: pointer;
+            line-height: 26px;
+        }
+    </style>
+</head>
+<body>
+    <div class="btn">load</div>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+</body>
+<script>
+
+    var form = document.createElement( 'form' );
+    form.style.display = 'none';
+    document.body.appendChild( form );
+
+    var fileInput = document.createElement( 'input' );
+    fileInput.multiple = true;
+    fileInput.type = 'file';
+    fileInput.addEventListener( 'change', function ( event ) {
+        let files = fileInput.files
+        if ( files.length > 0 ) {
+            var filesMap = createFileMap( files );
+            var manager = new THREE.LoadingManager();
+            manager.setURLModifier( function ( url ) {
+                var file = filesMap[ url ];
+                if ( file ) {
+                    console.log( 'Loading', url );
+                    return URL.createObjectURL( file );
+                }
+                return url;
+            } );
+            for ( var i = 0; i < files.length; i ++ ) {
+                loadFile( files[ i ], manager );
+            }
+        }
+        form.reset();
+
+    } )
+    form.appendChild( fileInput );
+
+    let scene = new THREE.Scene()
+    let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    let renderer = new THREE.WebGLRenderer({
+        antialias:true, // 开启抗锯齿处理
+        alpha:true
+    })
+    renderer.setClearColor(new THREE.Color(0xEEEEEE))
+    renderer.setSize(window.innerWidth,window.innerHeight)
+    renderer.shadowMap.enabled = true
+    let domElement = renderer.domElement
+
+    var controller = new THREE.OrbitControls( camera, domElement )
+    camera.position.x = -30
+    camera.position.y = 40
+    camera.position.z = 30
+    camera.lookAt(scene.position)
+
+    var grid = new THREE.GridHelper( 30, 30, 0x444444, 0x888888 );
+    scene.add( grid );
+    var axesHelper = new THREE.AxesHelper( 5 );
+    scene.add( axesHelper );
+    var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+    scene.add( light );
+    var light = new THREE.PointLight( 0xff0000, 1, 100 );
+    light.position.set( 0, 200, 0 );
+    scene.add( light );
+
+    document.getElementById('WebGL-output').appendChild(domElement)
+
+    let btn = document.querySelector('.btn')
+    btn.onclick = function(e) {
+        fileInput.click()
+    }
+    
+    renderScene()
+    
+    window.onresize = onResize
+
+    function onResize(){
+        camera.aspect = window.innerWidth / window.innerHeight
+        camera.updateProjectionMatrix()
+        renderer.setSize(window.innerWidth,window.innerHeight)
+    }
+
+    function renderScene(){
+        renderer.render(scene,camera)
+        requestAnimationFrame(renderScene)
+    }
+
+    function loadFile( file, manager ) {
+        var filename = file.name;
+		var extension = filename.split( '.' ).pop().toLowerCase();
+
+		var reader = new FileReader();
+		
+        switch ( extension ) {
+            case 'obj': 
+                reader.addEventListener( 'load', function ( event ) {
+                    var contents = event.target.result;
+                    var object = new THREE.OBJLoader().parse( contents );
+                    object.name = filename;
+                    console.log(object)
+                    scene.add(object)
+                }, false );
+                reader.readAsText( file );
+                break;
+        }
+    }
+
+    function createFileMap( files ) {
+        var map = {};
+        for ( var i = 0; i < files.length; i ++ ) {
+            var file = files[ i ];
+            map[ file.name ] = file;
+        }
+        return map;
+    }
+        
+    
+</script>
+</html>

@@ -1,0 +1,110 @@
+构造器（Constructor）
+	PerspectiveCamera( fov, aspect, near, far )
+	fov — 相机视锥体垂直视角
+	aspect — 相机视锥体宽高比
+	near — 相机视锥体近裁剪面
+	far — 相机视锥体远裁剪面。
+
+属性（Properties）
+# .fov
+	相机视锥体垂直视角，从下到上的观察角度。
+# .zoom
+	获取或设置相机缩放因子（zoom factor）。
+# .near
+	相机视锥体近裁剪面。
+# .far
+	相机视锥体远裁剪面。
+# .focus
+	焦点，用于立体视觉和场深度效果的目标距离。这个参数不影响投影矩阵，除非是使用立体摄影机。这个参数不影响投影矩阵，除非是使用立体摄影机。
+# .aspect
+	相机视锥体宽高比，等于窗口宽度除以窗口高度。
+# .view
+	视椎体窗口规格或null。
+# .filmGauge
+	用于较大坐标轴的胶片尺寸。默认为35（毫米）。这个参数不影响投影矩阵，除非.filmOffset设置为非零值。
+# .filmOffset
+	水平偏离中心偏移量，和.filmGauge同单位。
+
+
+方法（Methods）
+# .getEffectiveFOV ()
+返回考虑了缩放系数 .zoom 的当前视角，单位为角度（°）。
+# .getFocalLength ()
+返回当前和 .filmGauge 有关的 .fov 的焦距。
+# .getFilmWidth ()
+返回胶片上图像的宽度。如果 .aspect 大于等于1（景观格式（landscape format）），则结果等于 .filmGauge。
+# .getFilmHeight ()
+返回胶片上图像的高度。如果 .aspect 小于等于1（肖像格式（portrait format）），则结果等于 .filmGauge。
+# .setFocalLength ( focalLength )
+设置当前和 .filmGauge 有关的 .fov 的焦距。
+默认情况下，焦距为35mm（全幅）相机指定。
+# .setLens ( focalLength, filmGauge )
+focalLength — 焦距（focal length）
+frameGauge — 胶片尺寸（film gauge）
+通过焦距设置 .fov 。也可以通过可选参数设置 .filmGauge。
+该方法已废弃，请使用 .setFocalLength 来替代。
+
+
+.setViewOffset ( fullWidth, fullHeight, x, y, width, height )
+fullWidth — 多视图设置的全宽
+fullHeight — 多视图设置的全高
+x — 副摄像头的水平偏移
+y — 副摄像头的垂直偏移
+width — 副摄像头宽度
+height — 副摄像头高度
+该方法用于在一个较大的视椎体中设置视图偏移。这对于多窗口或多监视器/多机设置是有用的。
+比如，如果你有一组 3x2 显示屏，每个屏幕分辨率为 1920x1080，显示屏位于一个网格中，如下所示：
++---+---+---+
+ |  A  |  B  |  C |
++---+---+---+
+ |  D  |  E  |  F |
++---+---+---+
+然后对于每个显示屏，你将像下面这样调用：
+var w = 1920;
+var h = 1080;
+var fullWidth = w * 3;
+var fullHeight = h * 2;
+
+// A
+camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 0, w, h );
+// B
+camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 0, w, h );
+// C
+camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 0, w, h );
+// D
+camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 1, w, h );
+// E
+camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 1, w, h );
+// F
+camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 1, w, h ); 注意，没有任何理由在一个网格中的显示屏必须具备同样的尺寸。
+# .clearViewOffset ()
+清除视图偏移。
+# .updateProjectionMatrix ()
+更新相机投影矩阵，必须在参数发生变化后调用。
+# .clone ()
+
+返回一个 PerspectiveCamera 对象的克隆。
+# .toJSON ()
+把相机数据转换成JSON格式。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

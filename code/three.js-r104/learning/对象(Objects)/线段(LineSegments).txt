@@ -1,0 +1,27 @@
+线段（LineSegments） 成对的点之间的连线。
+
+构造器（Constructor）
+	LineSegments( geometry, material )
+	geometry — 代表每一个线段的 顶点对 。
+	material — 线条材质，默认为 LineBasicMaterial.
+	如果没有提供材料参数，将使用随机材料。
+
+属性（Properties）
+# .geometry
+	代表每一个线段的顶点对。
+# .material
+	线条材质。
+
+方法（Methods）
+# .raycast ( raycaster, intersects )
+	得到该线段和光线投射之间的交点。Raycaster.intersectObject 将调用该方法。
+# .clone ()
+	返回该线段对象及其后代的克隆。
+
+
+
+
+
+
+
+

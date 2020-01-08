@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+</body>
+<script src="./data.js"></script>
+<script>
+    window.onload = function(){
+        let scene = new THREE.Scene()
+        let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer({
+            antialias:true, // 开启抗锯齿处理
+            alpha:true
+        })
+        renderer.setClearColor(new THREE.Color(0xEEEEEE))
+        renderer.setSize(window.innerWidth,window.innerHeight)
+        renderer.shadowMap.enabled = true
+        let domElement = renderer.domElement
+
+        var controller = new THREE.OrbitControls( camera, domElement )
+        camera.position.x = 80
+        camera.position.y = 80
+        camera.position.z = 80
+        camera.lookAt(scene.position)
+
+        data.map(d=>generateWall(d)) // 根据数据和相关方法构建房间
+       
+        function generateWall(wallData) {
+            let shape = new THREE.Shape() 
+            shape.moveTo(wallData.start.x, wallData.start.y)
+            for(let i = 0; i < wallData.path.length; i++) { // make path
+                let p = wallData.path[i]
+                shape.lineTo(p.x, p.y)
+            }
+
+            for (let i = 0; i < wallData.children.length; i++) { // make holes
+                let item = wallData.children[i]
+                let hole = new THREE.Path()
+                hole.moveTo(item.start.x, item.start.y)
+                for(let j =0; j < item.path.length; j++) { // make hole path
+                    hole.lineTo(item.path[j].x, item.path[j].y)
+                }
+                shape.holes.push(hole)
+            }
+
+            for(let i = 0;i < wallData.children.length; i++){ // make child ( windows/doors )
+                let item = wallData.children[i]
+                let child = new THREE.Shape() 
+                child.moveTo(item.start.x, item.start.y)
+                for(let j = 0; j < item.path.length; j++) {
+                    child.lineTo(item.path[j].x, item.path[j].y)
+                }
+                let geometry = new THREE.ShapeGeometry( child )
+                let color = new THREE.Color( Math.random(), Math.random(), Math.random() )
+                let mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial({ color }) )
+                mesh.position.copy(wallData.position)
+                mesh.rotation.x = wallData.rotation.x
+                mesh.rotation.y = wallData.rotation.y
+                mesh.type = item.type
+                scene.add(mesh)
+            }
+
+            let geometry = new THREE.ShapeGeometry( shape ) // make wall
+            let color = new THREE.Color( Math.random(), Math.random(), Math.random() )
+            let mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial({ color }) )
+            mesh.position.copy(wallData.position)
+            mesh.rotation.x = wallData.rotation.x
+            mesh.rotation.y = wallData.rotation.y
+            mesh.type = wallData.type
+
+            scene.add(mesh)
+        }
+
+        var grid = new THREE.GridHelper( 100, 50, 0x444444, 0x888888 );
+        scene.add( grid );
+        var axesHelper = new THREE.AxesHelper( 5 );
+        scene.add( axesHelper );
+
+        document.getElementById('WebGL-output').appendChild(domElement)
+        
+        renderScene()
+        function renderScene(){
+            renderer.render(scene,camera)
+            requestAnimationFrame(renderScene)
+        }
+        window.onresize = onResize
+        function onResize(){
+            camera.aspect = window.innerWidth / window.innerHeight
+            camera.updateProjectionMatrix()
+            renderer.setSize(window.innerWidth,window.innerHeight)
+        } 
+}
+    
+</script>
+</html>

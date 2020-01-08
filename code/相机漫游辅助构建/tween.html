@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../src/libs/popmotion.js"></script>
+    <style>
+        #box{
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            border-radius: 5px;
+            width: 40px;
+            height: 20px;
+            background-color: #00ff00;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div id="box"></div>
+</body>
+<script>
+    let box = document.getElementById('box')
+    let { tween, easing } = popmotion
+    
+    let timer = popmotion.tween({
+        from: {
+            left: 10
+        },
+        to: {
+            left: 100
+        },
+        ease: easing.easeInOut,
+        duration: 1000
+    }).start({
+        update: (o) => {
+            box.style.left = o.left + 'px'
+        },
+        complete: () => {
+            console.log('done')
+        }
+    })
+</script>
+</html>

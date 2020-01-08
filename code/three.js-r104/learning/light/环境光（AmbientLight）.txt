@@ -1,0 +1,13 @@
+环境光（AmbientLight）
+	这种光的颜色被应用到全局范围内的所有对象。
+
+构造器（Constructor）
+	AmbientLight( color, intensity )
+	color — 光源颜色的RGB数值。
+	intensity -- 光源强度的数值。
+	这将创建一个具有给定颜色和强度的环境光。
+
+属性（Properties）
+	通用属性可查看基类 Light。
+方法（Methods）
+	通用方法可查看基类 Light。

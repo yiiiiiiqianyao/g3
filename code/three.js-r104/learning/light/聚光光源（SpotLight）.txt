@@ -1,0 +1,79 @@
+聚光光源（SpotLight）
+	一种能投射锥形阴影区域的点光源。
+
+代码示例
+	// 白色聚光灯从侧面发光，投射阴影
+
+	var spotLight = new THREE.SpotLight( 0xffffff );
+	spotLight.position.set( 100, 1000, 100 );
+
+	spotLight.castShadow = true;
+
+	spotLight.shadow.mapSize.width = 1024;
+	spotLight.shadow.mapSize.height = 1024;
+
+	spotLight.shadow.camera.near = 500;
+	spotLight.shadow.camera.far = 4000;
+	spotLight.shadow.camera.fov = 30;
+
+	scene.add( spotLight );
+
+构造器（Constructor）
+	SpotLight( color, intensity, distance, angle, penumbra, decay )
+	color — 颜色的RBG数值。
+	intensity — 光强的数值。
+	distance -- 光强为0处到光源的距离，0表示无穷大。
+	angle -- 光线散射角度，最大为Math.PI/2。
+	penumbra -- 聚光锥的半影衰减百分比。在0和1之间的值。默认为0。
+	decay -- 沿着光照距离的衰退量。
+
+属性（Properties）
+通用属性可查看基类 Light 。
+# .target
+	聚光灯的焦点位于 target.position 处。
+	缺省位置 — (0,0,0).
+	*注意*：目前为了target属性正常工作，它必须是 scene 的一部分，也就是通过如下方法添加到场景中：
+	scene.add( light.target )
+# .power
+	光功率。
+	在“物理正确”模式中，表示以"流明（光通量单位）"为单位的光功率。
+	Default - 4PI。
+# .distance
+	如果非0，光照将沿着光源处到该距离处线性衰减为零。
+	缺省值 — 0.0，表示光照一直到无穷远才衰减为零。
+# .angle
+	光线散射角度（以弧度为单位），最大为 Math.PI/2。
+	Default — Math.PI/3。
+# .penumbra
+	聚光锥的半影衰减百分比。在0和1之间的值。
+	默认值 — 0.0。
+# .decay
+	沿着光照距离的衰退量。
+	在“物理正确”模式中，decay = 2将实现现实世界的光衰减。
+	缺省值 — 1。
+# .shadow
+	此属性存储用来渲染光照阴影的所有相关信息。
+# .castShadow
+	如果设置为 true ，光照将投射动态阴影。*警告*：该操作是很耗费计算资源的，并且需要精心调整才能正确工作。
+	缺省值 — false.
+
+
+
+
+方法（Methods）
+通用方法可查看基类 Light 。
+# .copy ( source )
+
+	将 source 的值复制到这个聚光灯对象。
+
+
+
+
+
+
+
+
+
+
+
+

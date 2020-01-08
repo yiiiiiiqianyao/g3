@@ -1,0 +1,20 @@
+Visualize a DirectionalLight's effect on the scene
+
+构造器（Constructor）
+	DirectionalLightHelper(light, size)
+	light -- DirectionalLight -- Light to visualize 
+	size -- dimensions of the plane
+
+Creates a line and plane to visualize the light's position and direction
+
+属性（Properties）
+# .lightPlane
+	Contains the line mesh showing the location of the directional light.
+# .light
+	Contains the directionalLight.
+# .targetLine
+	Contains the line mesh that shows the direction of the light.
+
+方法（Methods）
+.# .update ()
+	Updates the helper to match the position and direction of the .light.

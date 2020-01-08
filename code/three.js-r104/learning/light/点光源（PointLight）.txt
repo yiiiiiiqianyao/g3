@@ -1,0 +1,46 @@
+点光源（PointLight）
+	使用 MeshLambertMaterial 或 Phong网孔材料(MeshPhongMaterial) 来影响对象。
+
+示例代码：
+	var light = new THREE.PointLight( 0xff0000, 1, 100 );
+	light.position.set( 50, 50, 50 );
+	scene.add( light );
+
+构造器（Constructor）
+	PointLight( color, intensity, distance, decay )
+	color — 颜色的RBG数值。
+	intensity — 光强的数值。
+	distance -- 光强为0处到光源的距离，0表示无穷大。
+	decay -- 沿着光照距离的衰退量。
+	在场景中的特定位置创建一个光源。光线照射在各个方向上（好比一个灯泡）。
+
+属性（Properties）
+通用属性可查看基类 Light 。
+# .power
+	光功率。
+	在“物理正确”模式中，表示以"流明（光通量单位）"为单位的光功率。
+	Default - 4PI。
+# .distance
+	如果非0，光照将沿着光源处到该距离处线性衰减为零。
+	缺省值 — 0.0，表示光照一直到无穷远才衰减为零。
+# .decay
+	沿着光照距离的衰退量。
+	在“物理正确”模式中，decay = 2将实现现实世界的光衰减。
+	缺省值 — 1。
+# .shadow
+	此属性存储用来渲染光照阴影的所有相关信息。
+
+方法（Methods）
+	通用方法可查看基类 Light 。
+# .copy ( source )
+
+	把 source 的数值拷贝给这个点光源对象。
+
+
+
+
+
+
+
+
+

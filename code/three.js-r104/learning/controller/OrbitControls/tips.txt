@@ -1,0 +1,16 @@
+controls.target.set( 0, 100, 0 );	//设置控制器的中心点
+
+controls.enableZoom = true;	//是否可以缩放
+
+controls.autoRotate = false;	//是否自动旋转
+controls.autoRotateSpeed = 0.5;
+
+controls.minDistance = 1;	//设置相机距离原点的最近距离
+
+controls.maxDistance = 2000;	//设置相机距离原点的最远距离
+
+controls.enablePan = true;	//是否开启右键拖拽
+
+controls.enableDamping = true;// 使动画循环使用时阻尼或自转 意思是否有惯性
+
+controls.dampingFactor = 0.25;//动态阻尼系数 就是鼠标拖拽旋转灵敏度

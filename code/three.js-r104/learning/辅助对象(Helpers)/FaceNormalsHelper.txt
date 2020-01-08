@@ -1,0 +1,50 @@
+Renders arrows to visualize an object's face normals. Requires that the object's 
+geometry be an instance of 几何模型(Geometry) (does not work with 缓存几何模型(BufferGeometry)), 
+and that face normals have been specified on all faces or calculated with computeFaceNormals.
+
+示例代码：
+	geometry = new THREE.BoxGeometry( 10, 10, 10, 2, 2, 2 );
+	material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+	object = new THREE.Mesh( geometry, material );
+
+	edges = new THREE.FaceNormalsHelper( object, 2, 0x00ff00, 1 );
+
+	scene.add( object );
+	scene.add( edges );
+
+构造器（Constructor）
+	FaceNormalsHelper( object, size, color, linewidth )
+	object -- object for which to render face normals
+	size -- size (length) of the arrows
+	color -- color of the arrows
+	linewidth -- width of the arrow lines
+
+属性（Properties）
+# .object
+	The attached object
+
+方法（Methods）
+# .update ()
+	Updates the face normal preview based on movement of the object.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

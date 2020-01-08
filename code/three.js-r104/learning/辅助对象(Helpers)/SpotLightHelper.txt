@@ -1,0 +1,19 @@
+代码示例：
+	var spotLight = new THREE.SpotLight( 0xffffff );
+	spotLight.position.set( 10, 10, 10 );
+	scene.add( spotLight );
+
+	var spotLightHelper = new THREE.SpotLightHelper( spotLight );
+	scene.add( spotLightHelper );
+
+构造器（Constructor）
+	SpotLightHelper(light)
+	light -- The SpotLight to display
+
+属性（Properties）
+# .light
+	The SpotLight
+
+方法（Methods）
+# .update ()
+	Updates the light helper.

@@ -1,0 +1,17 @@
+用来显示包围一个对象的线框盒（无面对角线）的辅助对象。
+
+示例代码：
+	var sphere = new THREE.SphereGeometry();
+	var object = new THREE.Mesh( sphere, new THREE.MeshBasicMaterial(0xff0000) );
+	var box = new THREE.BoxHelper( object );
+	scene.add( box );
+
+构造器（Constructor）
+	BoxHelper( object )
+	创建一个新的线框盒（wireframe box）以匹配传入的盒子尺寸。
+
+属性（Properties）
+	(none)
+方法（Methods）
+# .update ( object )
+	更新helper的几何模型来匹配传入对象的 包围盒 的大小。

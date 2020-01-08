@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../src/jquery-1.11.1.min.js"></script>
+</head>
+<body>
+    <input type="file" id="files">
+    <button id="btn">上传</button>
+</body>
+<script>
+    let btn = document.getElementById('btn')
+    let formdata = new FormData()
+    formdata.append("name","admin")
+    btn.onclick = function() {
+
+        $.ajax({
+
+    　　　　url: 'http://localhost:3001/fetch_test',
+
+    　　　　type:"POST",
+
+    　　　　data: {a:new Date().getMilliseconds()} ,
+
+    　　　　dataType: 'json',
+
+    　　　　success:function(data){
+
+        　　　　console.log(data)
+    　　　　}
+
+    　　});
+
+        //     const settings = {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
+        //         },
+        //         body: encodeURI(JSON.stringify({
+        //             name:'oxxo',
+        //             age:18
+        //         })),
+        //     }
+        // fetch(`http://localhost:3001/fetch_test`, settings)
+        // .then(res => {
+        //     console.log(res)
+        // })
+        // fetch('http://localhost:3001/fetch_test', {
+        //     method:"POST",
+        //     headers:{
+    	// 	    'Content-Type':'application/x-www-form-urlencoded'
+        //     },
+        //     body: {
+        //             name:'oxxo',
+        //             age:18
+        //         },
+        // }).then(function(response){
+        //     console.log(response);
+        // })
+        // getDevices = async () => {
+        //     const settings = {
+        //         method: 'POST',
+        //         headers: {
+        //               'Accept': 'application/json',
+        //               'Content-Type': 'application/json'
+        //         },
+        //         body: encodeURI(JSON.stringify({
+        //             name:'oxxo',
+        //             age:18
+        //         })),
+        //     };
+        
+        //     const data = await fetch(`http://localhost:3001/fetch_test`, settings)
+               
+        //         .then(response => response.json())
+        //         .then(json => {
+        //             return json;
+        //         })
+        //         .catch(e => {
+        //             return e
+        //         })
+        
+        
+        //     return data
+        // }
+        // getDevices()
+    }
+</script>
+</html>

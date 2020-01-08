@@ -1,0 +1,56 @@
+Creates a wireframe object that shows the "hard" edges of another object's geometry. To draw a full wireframe image of an object,
+ see WireframeHelper.
+
+代码示例：
+	geometry = new THREE.BoxGeometry( 10, 10, 10, 2, 2, 2 );
+	material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+	object = new THREE.Mesh( geometry, material );
+
+	edges = new THREE.EdgesHelper( object, 0x00ff00 );
+
+	scene.add( object );
+	scene.add( edges );
+
+构造器（Constructor）
+	EdgesHelper( object, color, thresholdAngle )
+	object -- Object of which to draw edges 
+	color -- Color of the edges.
+	thresholdAngle -- the minimim angle (in degrees), between the face normals of 
+		            adjacent faces, that is required to render an edge. Default is 0.1.
+
+Creates a Line, showing only the "hard" edges of the passed object; specifically, no edge will be 
+drawn between faces which are adjacent and coplanar (or nearly coplanar).
+
+属性（Properties）
+	none
+方法（Methods）
+	none
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+</body>
+<script>
+    window.onload = function(){
+        let scene = new THREE.Scene()
+        let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer({
+            antialias:true, // 开启抗锯齿处理
+            alpha:true
+        })
+        renderer.setClearColor(new THREE.Color(0xEEEEEE))
+        renderer.setSize(window.innerWidth,window.innerHeight)
+        renderer.shadowMap.enabled = true
+        let domElement = renderer.domElement
+
+        var controller = new THREE.OrbitControls( camera, domElement )
+        camera.position.x = -30
+        camera.position.y = 40
+        camera.position.z = 30
+        camera.lookAt(scene.position)
+
+        var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } )
+
+        var shape1 = new THREE.Shape()
+        shape1.moveTo(0, 0) // x y
+        shape1.lineTo(0, 10)
+        shape1.lineTo(10, 10)
+        shape1.lineTo(10, 0)
+        shape1.lineTo(0, 0)
+        var geometry1 = new THREE.ShapeGeometry( shape1 )
+        var mesh1 = new THREE.Mesh( geometry1, material ) 
+        scene.add( mesh1 )
+
+        var shape2 = new THREE.Shape()
+        shape2.moveTo(0, 0) // x y
+        shape2.lineTo(0, 10)
+        shape2.lineTo(10, 10)
+        shape2.lineTo(10, 0)
+        shape2.lineTo(0, 0)
+        var geometry2 = new THREE.ShapeGeometry( shape2 )
+        var mesh2 = new THREE.Mesh( geometry2, material ) 
+        mesh2.position.copy(new THREE.Vector3(10, 0, 0))
+        mesh2.rotation.y = -Math.PI/2
+        scene.add( mesh2 )
+
+        var shape3 = new THREE.Shape()
+        shape3.moveTo(0, 0) // x y
+        shape3.lineTo(0, 10)
+        shape3.lineTo(10, 10)
+        shape3.lineTo(10, 0)
+        shape3.lineTo(0, 0)
+        var geometry3 = new THREE.ShapeGeometry( shape3 )
+        var mesh3 = new THREE.Mesh( geometry3, material ) 
+        mesh3.position.copy(new THREE.Vector3(10, 0, 10))
+        mesh3.rotation.y = -Math.PI
+        scene.add( mesh3 )
+
+        var shape4 = new THREE.Shape()
+        shape4.moveTo(0, 0) // x y
+        shape4.lineTo(0, 10)
+        shape4.lineTo(10, 10)
+        shape4.lineTo(10, 0)
+        shape4.lineTo(0, 0)
+        var geometry4 = new THREE.ShapeGeometry( shape4 )
+        var mesh4 = new THREE.Mesh( geometry4, material ) 
+        mesh4.position.copy(new THREE.Vector3(0, 0, 10))
+        mesh4.rotation.y = -3*Math.PI/2
+        scene.add( mesh4 )
+
+        var grid = new THREE.GridHelper( 30, 30, 0x444444, 0x888888 );
+        scene.add( grid );
+        var axesHelper = new THREE.AxesHelper( 5 );
+        scene.add( axesHelper );
+
+        document.getElementById('WebGL-output').appendChild(domElement)
+        
+        renderScene()
+        function renderScene(){
+            renderer.render(scene,camera)
+            requestAnimationFrame(renderScene)
+        }
+        window.onresize = onResize
+        function onResize(){
+            camera.aspect = window.innerWidth / window.innerHeight
+            camera.updateProjectionMatrix()
+            renderer.setSize(window.innerWidth,window.innerHeight)
+        }
+        
+}
+    
+</script>
+</html>

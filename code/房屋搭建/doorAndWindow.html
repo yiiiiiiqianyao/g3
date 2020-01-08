@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+</body>
+<script>
+    window.onload = function(){
+        let scene = new THREE.Scene()
+        let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer({
+            antialias:true, // 开启抗锯齿处理
+            alpha:true
+        })
+        renderer.setClearColor(new THREE.Color(0xEEEEEE))
+        renderer.setSize(window.innerWidth,window.innerHeight)
+        renderer.shadowMap.enabled = true
+        let domElement = renderer.domElement
+
+        var controller = new THREE.OrbitControls( camera, domElement )
+        camera.position.x = -30
+        camera.position.y = 40
+        camera.position.z = 30
+        camera.lookAt(scene.position)
+
+        var wall = new THREE.Shape()
+        wall.moveTo(0, 0) // x y
+        wall.lineTo(0, 20)
+        wall.lineTo(30, 20)
+        wall.lineTo(30, 0)
+        wall.lineTo(15, 0)
+        wall.lineTo(15, 10)
+        wall.lineTo(10, 10)
+        wall.lineTo(10, 0)
+        wall.lineTo(0, 0)
+
+        var hole = new THREE.Path()
+        hole.moveTo(20,5)
+        hole.lineTo(20,10)
+        hole.lineTo(25,10)
+        hole.lineTo(25,5)
+        hole.lineTo(20,5)
+        wall.holes.push(hole)
+
+        var wallG = new THREE.ShapeGeometry( wall )
+        var wallM = new THREE.MeshBasicMaterial( { color: 0xff0000 } )
+        var wallmesh = new THREE.Mesh( wallG, wallM ) 
+        scene.add( wallmesh )
+
+        var door = new THREE.Shape()
+        door.moveTo(10, 0) // x y
+        door.lineTo(10, 10)
+        door.lineTo(15, 10)
+        door.lineTo(15, 0)
+        door.lineTo(10, 0)
+        var doorG = new THREE.ShapeGeometry( door )
+        var doorM = new THREE.MeshBasicMaterial( { color: 0x00ff00 } )
+        var doormesh = new THREE.Mesh( doorG, doorM ) 
+        scene.add( doormesh )
+
+        var win = new THREE.Shape()
+        win.moveTo(20, 5) // x y
+        win.lineTo(20, 10)
+        win.lineTo(25, 10)
+        win.lineTo(25, 5)
+        win.lineTo(20, 5)
+        var winG = new THREE.ShapeGeometry( win )
+        var winM = new THREE.MeshBasicMaterial( { color: 0x0000ff } )
+        var winmesh = new THREE.Mesh( winG, winM ) 
+        scene.add( winmesh )
+
+        var grid = new THREE.GridHelper( 30, 30, 0x444444, 0x888888 );
+        scene.add( grid );
+        var axesHelper = new THREE.AxesHelper( 5 );
+        scene.add( axesHelper );
+
+        document.getElementById('WebGL-output').appendChild(domElement)
+        
+        renderScene()
+        function renderScene(){
+            renderer.render(scene,camera)
+            requestAnimationFrame(renderScene)
+        }
+        window.onresize = onResize
+        function onResize(){
+            camera.aspect = window.innerWidth / window.innerHeight
+            camera.updateProjectionMatrix()
+            renderer.setSize(window.innerWidth,window.innerHeight)
+        }
+        
+}
+    
+</script>
+</html>

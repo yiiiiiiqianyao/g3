@@ -1,0 +1,30 @@
+The GridHelper is an object to define grids. Grids are two-dimensional arrays of lines.
+
+代码示例：
+	var size = 10;
+	var step = 1;
+
+	var gridHelper = new THREE.GridHelper( size, step );
+	scene.add( gridHelper );
+
+构造器（Constructor）
+	GridHelper( size, step, colorCenterLine, colorGrid )
+	size -- The size of the grid 
+	step -- The size of the step between 2 lines 
+	colorCenterLine -- The color of the centerline. This can be a Color, a hexadecimal value and an CSS-Color name. Default is 0x444444 
+	colorGrid -- The color of the lines of the grid. This can be a Color, a hexadecimal value and an CSS-Color name. Default is 0x888888
+
+创建一个新的 GridHelper of size 'size' and with steps of size 'step'. Colors are optional.
+
+
+
+
+
+
+
+
+
+
+
+
+

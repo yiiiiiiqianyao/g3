@@ -1,0 +1,97 @@
+
+理解three.js中的buffergeometry
+
+1、Geometry 生成的模型是这样的 （代码）-> (CUP 进行数据处理，转化成虚拟3D数据) -> (GPU 进行数据组装，转化成像素点，准备渲染) -> 显示器
+第二次操作时重复走这些流程
+
+2、BufferGeometry 生成模型流程 (代码) -> (CUP 进行数据处理，转化成虚拟3D数据) -> (GPU 进行数据组装，转化成像素点，准备渲染) -> (丢入缓存区) -> 显示器
+第二次修改时，通过API直接修改缓存区数据，流程就变成了这样
+(代码) -> (CUP 进行数据处理，转化成虚拟3D数据) -> (修改缓存区数据) -> 显示器
+
+节约了GPU性能的运算性能
+
+BufferGeometry要比 几何模型(Geometry) 更难以处理，适合用来存储静态对象
+	使用Vector3来访问位置数据
+	以Color对象来访问颜色数据
+	从相应的attribute缓存中访问原始数据
+简单示例：
+	var geometry = new THREE.BufferGeometry();
+	// create a simple square shape. We duplicate the top left and bottom right
+	// vertices because each vertex needs to appear once per triangle.
+	var vertices = new Float32Array( [
+	-1.0, -1.0,  1.0,
+	 1.0, -1.0,  1.0,
+	 1.0,  1.0,  1.0,
+
+	 1.0,  1.0,  1.0,
+	-1.0,  1.0,  1.0,
+	-1.0, -1.0,  1.0
+	] );
+
+	// itemSize = 3 because there are 3 values (components) per vertex
+	geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+	var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+	var mesh = new THREE.Mesh( geometry, material );
+
+
+
+访问属性（Accessing attributes）
+WebGL 把和每个顶点模型关联的数据保存在 属性（attributes） 中。 比如顶点位置、顶点法向量、顶点颜色等。当使用 几何模型(Geometry) 时，renderer 负责封装这些信息到有类型数组缓存中并发送该数据到着色器。 当使用BufferGeometry时，所有这些和独立属性关联的数据都被保存进缓存中。 举例来说，这意味着为了获取一个顶点的关联位置数据，你必须调用 .getAttribute 来访问 'position' attribute，然后可以访问该位置属性的x/y/z坐标值。
+
+下面的属性通过不同的类成员来设置：
+
+position (itemSize: 3)
+保存模型中每个顶点的x, y, 和 z 坐标。通过 .fromGeometry() 设置。
+normal (itemSize: 3)
+保存模型中每个顶点处的面或顶点法向量的x, y, 和 z 分量。通过 .fromGeometry() 设置。
+color (itemSize: 3)
+保存模型中每个顶点颜色的红、绿和蓝色通道。通过 .fromGeometry() 设置。
+index (itemSize: 3)
+允许顶点可以被在多个三角形（如相邻三角形）中复用；这被称为使用“索引三角形（indexed triangles）”，和在 几何模型(Geometry) 中的工作方式差不多： 每个三角形和三个顶点的索引值关联。此属性因此存储每个三角面上的每个顶点的索引。 如果该属性未被设置，renderer 假设每三个连续位置构成单个三角形。
+
+
+构造器（Constructor）
+	BufferGeometry()
+	创建一个新的 BufferGeometry，并设置一些属性为默认值。
+
+属性（Properties）
+# .id
+	这个BufferGeometry实例的唯一编号。
+# .attributes
+	该哈希表中数据项的id用来设置属性名称，value用来设置 buffer。 使用addattribute和getAttribute方法来访问这个几何模型（geometry）属性，而不是直接访问该属性。
+# .drawcalls (之前是 # .offsets )
+	对于使用索引三角形的几何模型，这个数组可以分为多个WebGL绘制调用。每个绘制调用将使用已配置的shader来绘制顶点的一些子集。 如果你的对象有65535个以上的顶点，这可能是必要的。每个元素是如下形式的一个对象：
+	{ start: Integer, count: Integer, index: Integer } 这里 start 指定本次绘制的第一个顶点的索引，count 指定要包含多少个顶点，而 index 指定一个可选的偏移量。 使用 addDrawCall 方法来添加绘制调用，而不是直接修改这个数组。
+# .boundingBox
+	包围盒（Bounding box）。
+	{ min: new THREE.Vector3(), max: new THREE.Vector3() }
+# .boundingSphere
+	包围球（Bounding sphere）。
+	{ radius: float }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

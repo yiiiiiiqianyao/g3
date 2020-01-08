@@ -1,0 +1,23 @@
+Creates a wireframe object that shows the edges of another object's geometry. To draw a 
+wireframe image showing only "hard" edges (edges between non-coplanar faces), see EdgesHelper.
+
+代码示例：
+	geometry = new THREE.BoxGeometry( 10, 10, 10, 2, 2, 2 );
+	material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+	object = new THREE.Mesh( geometry, material );
+
+	wireframe = new THREE.WireframeHelper( object, 0x00ff00 );
+
+	scene.add( object );
+	scene.add( wireframe );
+
+构造器（Constructor）
+	WireframeHelper( object, color )
+	object -- Object of which to draw edges 
+	color -- Color of the edges.
+Creates a Line, showing only the edges between vertices of an object.
+
+属性（Properties）
+none
+方法（Methods）
+none

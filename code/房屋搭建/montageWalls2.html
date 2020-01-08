@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+</body>
+<script>
+    window.onload = function(){
+        let scene = new THREE.Scene()
+        let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer({
+            antialias:true, // 开启抗锯齿处理
+            alpha:true
+        })
+        renderer.setClearColor(new THREE.Color(0xEEEEEE))
+        renderer.setSize(window.innerWidth,window.innerHeight)
+        renderer.shadowMap.enabled = true
+        let domElement = renderer.domElement
+
+        var controller = new THREE.OrbitControls( camera, domElement )
+        camera.position.x = 80
+        camera.position.y = 80
+        camera.position.z = 80
+        camera.lookAt(scene.position)
+
+        var material = new THREE.MeshNormalMaterial()
+
+        var floor = new THREE.Shape()
+        floor.moveTo(0, 0) // x y
+        floor.lineTo(0, 40)
+        floor.lineTo(20, 40)
+        floor.lineTo(20, 20)
+        floor.lineTo(40, 20)
+        floor.lineTo(40, 0)
+        floor.lineTo(0, 0)
+        var geometryf = new THREE.ShapeGeometry( floor )
+        var meshf = new THREE.Mesh( geometryf, material ) 
+        meshf.rotation.x = -Math.PI/2
+        meshf.position.copy(new THREE.Vector3(0, 0, 40))
+        scene.add( meshf )
+
+        var wall1 = new THREE.Shape()
+        wall1.moveTo(0, 0) // x y
+        wall1.lineTo(0, 30)
+        wall1.lineTo(20, 30)
+        wall1.lineTo(20, 0)
+        wall1.lineTo(0, 0)
+        var geometry1 = new THREE.ShapeGeometry( wall1 )
+        var mesh1 = new THREE.Mesh( geometry1, material ) 
+        scene.add( mesh1 )
+
+        var wall2 = new THREE.Shape()
+        wall2.moveTo(0, 0) // x y
+        wall2.lineTo(0, 30)
+        wall2.lineTo(20, 30)
+        wall2.lineTo(20, 0)
+        wall2.lineTo(0, 0)
+        var geometry2 = new THREE.ShapeGeometry( wall2 )
+        var mesh2 = new THREE.Mesh( geometry2, material ) 
+        mesh2.position.copy(new THREE.Vector3(20, 0, 0))
+        mesh2.rotation.y = -Math.PI/2
+        scene.add( mesh2 )
+
+        var wall3 = new THREE.Shape()
+        wall3.moveTo(0, 0) // x y
+        wall3.lineTo(0, 30)
+        wall3.lineTo(20, 30)
+        wall3.lineTo(20, 0)
+        wall3.lineTo(0, 0)
+        var geometry3 = new THREE.ShapeGeometry( wall3 )
+        var mesh3 = new THREE.Mesh( geometry3, material ) 
+        mesh3.position.copy(new THREE.Vector3(20, 0, 20))
+        scene.add( mesh3 )
+
+        var wall4 = new THREE.Shape()
+        wall4.moveTo(0, 0) // x y
+        wall4.lineTo(0, 30)
+        wall4.lineTo(20, 30)
+        wall4.lineTo(20, 0)
+        wall4.lineTo(0, 0)
+
+        var hole = new THREE.Path()
+        hole.moveTo(5, 10)
+        hole.lineTo(5, 20)
+        hole.lineTo(15, 20)
+        hole.lineTo(15, 10)
+        hole.lineTo(5, 10)
+        wall4.holes.push(hole)
+
+        var geometry4 = new THREE.ShapeGeometry( wall4 )
+        var mesh4 = new THREE.Mesh( geometry4, material ) 
+        mesh4.position.copy(new THREE.Vector3(40, 0, 20))
+        mesh4.rotation.y = -Math.PI/2
+        scene.add( mesh4 )
+
+        var win = new THREE.Shape()
+        win.moveTo(5, 10)
+        win.lineTo(5, 20)
+        win.lineTo(15, 20)
+        win.lineTo(15, 10)
+        win.lineTo(5, 10)
+        var geometryw = new THREE.ShapeGeometry( win )
+        var meshw = new THREE.Mesh( geometryw, new THREE.MeshBasicMaterial({color: 0xff0000}) ) 
+        meshw.position.copy(new THREE.Vector3(40, 0, 20))
+        meshw.rotation.y = -Math.PI/2
+        scene.add( meshw )
+
+
+        var wall5 = new THREE.Shape()
+        wall5.moveTo(0, 0) // x y
+        wall5.lineTo(0, 30)
+        wall5.lineTo(40, 30)
+        wall5.lineTo(40, 0)
+        wall5.lineTo(0, 0)
+
+        var hole2 = new THREE.Path()
+        hole2.moveTo(10, 0)
+        hole2.lineTo(10, 20)
+        hole2.lineTo(30, 20)
+        hole2.lineTo(30, 0)
+        hole2.lineTo(10, 0)
+        wall5.holes.push(hole2)
+
+        var geometry5 = new THREE.ShapeGeometry( wall5 )
+        var mesh5 = new THREE.Mesh( geometry5, material ) 
+        mesh5.position.copy(new THREE.Vector3(40, 0, 40))
+        mesh5.rotation.y = -Math.PI
+        scene.add( mesh5 )
+
+        var door = new THREE.Shape()
+        door.moveTo(10, 0)
+        door.lineTo(10, 20)
+        door.lineTo(30, 20)
+        door.lineTo(30, 0)
+        door.lineTo(10, 0)
+        var geometryr = new THREE.ShapeGeometry( door )
+        var meshr = new THREE.Mesh( geometryr, new THREE.MeshBasicMaterial({color: 0xffff00}) ) 
+        meshr.position.copy(new THREE.Vector3(40, 0, 40))
+        meshr.rotation.y = -Math.PI
+        scene.add( meshr )
+
+
+        var wall6 = new THREE.Shape()
+        wall6.moveTo(0, 0) // x y
+        wall6.lineTo(0, 30)
+        wall6.lineTo(40, 30)
+        wall6.lineTo(40, 0)
+        wall6.lineTo(0, 0)
+        var geometry6 = new THREE.ShapeGeometry( wall6 )
+        var mesh6 = new THREE.Mesh( geometry6, material ) 
+        mesh6.position.copy(new THREE.Vector3(0, 0, 40))
+        mesh6.rotation.y = -3*Math.PI/2
+        scene.add( mesh6 )
+
+
+        var roof = new THREE.Shape()
+        roof.moveTo(0, 0) // x y
+        roof.lineTo(0, 40)
+        roof.lineTo(40, 40)
+        roof.lineTo(40, 20)
+        roof.lineTo(20, 20)
+        roof.lineTo(20, 0)
+        roof.lineTo(0, 0)
+        var geometryrf = new THREE.ShapeGeometry( roof )
+        var meshrf = new THREE.Mesh( geometryrf, material )
+        meshrf.position.copy(new THREE.Vector3(0, 30, 0))
+        meshrf.rotation.x = Math.PI/2
+        scene.add( meshrf )
+
+        // ---- add inside wall
+
+        var iwall1 = new THREE.Shape()
+        iwall1.moveTo(0, 0)
+        iwall1.lineTo(0, 30)
+        iwall1.lineTo(20, 30)
+        iwall1.lineTo(20, 0)
+        iwall1.lineTo(0, 0)
+
+        var ihole1 = new THREE.Path()
+        ihole1.moveTo(5, 0)
+        ihole1.lineTo(5, 20)
+        ihole1.lineTo(15, 20)
+        ihole1.lineTo(15, 0)
+        ihole1.lineTo(5, 0)
+        iwall1.holes.push(ihole1)
+
+        var geometryi1 = new THREE.ShapeGeometry( iwall1 )
+        var meshri1 = new THREE.Mesh( geometryi1, new THREE.MeshBasicMaterial({color: 0x00ff00}) )
+        meshri1.position.copy(new THREE.Vector3(0, 0, 20))
+        scene.add( meshri1 )
+
+        var idoor1 = new THREE.Shape() 
+        idoor1.moveTo(5, 0)
+        idoor1.lineTo(5, 20)
+        idoor1.lineTo(15, 20)
+        idoor1.lineTo(15, 0)
+        idoor1.lineTo(5, 0)
+        var geometryid1 = new THREE.ShapeGeometry( idoor1 )
+        var meshrid1 = new THREE.Mesh( geometryid1, new THREE.MeshBasicMaterial({color: 0x0000ff}) )
+        meshrid1.position.copy(new THREE.Vector3(0, 0, 20))
+        scene.add( meshrid1 )
+
+        var iwall2 = new THREE.Shape()
+        iwall2.moveTo(0, 0)
+        iwall2.lineTo(0, 30)
+        iwall2.lineTo(20, 30)
+        iwall2.lineTo(20, 0)
+        iwall2.lineTo(0, 0)
+
+        var ihole2 = new THREE.Path()
+        ihole2.moveTo(5, 0)
+        ihole2.lineTo(5, 20)
+        ihole2.lineTo(15, 20)
+        ihole2.lineTo(15, 0)
+        ihole2.lineTo(5, 0)
+        iwall2.holes.push(ihole2)
+
+        var geometryi2 = new THREE.ShapeGeometry( iwall2 )
+        var meshri2 = new THREE.Mesh( geometryi2, new THREE.MeshBasicMaterial({color: 0x00ff00}) )
+        meshri2.rotation.y = -Math.PI
+        meshri2.position.copy(new THREE.Vector3(20, 0, 20))
+        scene.add( meshri2 )
+
+        var idoor2 = new THREE.Shape() 
+        idoor2.moveTo(5, 0)
+        idoor2.lineTo(5, 20)
+        idoor2.lineTo(15, 20)
+        idoor2.lineTo(15, 0)
+        idoor2.lineTo(5, 0)
+        var geometryid2 = new THREE.ShapeGeometry( idoor2 )
+        var meshrid2 = new THREE.Mesh( geometryid2, new THREE.MeshBasicMaterial({color: 0x0000ff}) )
+        meshrid2.rotation.y = -Math.PI
+        meshrid2.position.copy(new THREE.Vector3(20, 0, 20))
+        scene.add( meshrid2 )
+
+        //---- 
+
+        var grid = new THREE.GridHelper( 100, 50, 0x444444, 0x888888 );
+        scene.add( grid );
+        var axesHelper = new THREE.AxesHelper( 5 );
+        scene.add( axesHelper );
+
+        document.getElementById('WebGL-output').appendChild(domElement)
+        
+        renderScene()
+        function renderScene(){
+            renderer.render(scene,camera)
+            requestAnimationFrame(renderScene)
+        }
+        window.onresize = onResize
+        function onResize(){
+            camera.aspect = window.innerWidth / window.innerHeight
+            camera.updateProjectionMatrix()
+            renderer.setSize(window.innerWidth,window.innerHeight)
+        }
+        
+}
+    
+</script>
+</html>

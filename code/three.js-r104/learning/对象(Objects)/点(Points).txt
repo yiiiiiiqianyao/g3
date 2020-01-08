@@ -1,0 +1,19 @@
+点（Points）
+	以可变大小的点形式来显示粒子的类
+
+构造器（Constructor）
+	Points( geometry, material )
+	geometry — 几何模型(Geometry) 的一个实例。
+	material — 材料(Material) 的一个实例(可选)。
+
+属性（Properties）
+# .geometry
+	一个 几何模型(Geometry) 实例，其中每个顶点指定系统中的一个粒子的位置。
+# .material
+	一个 材料(Material) 实力， 定义对象的外观。默认的是随机色彩的 点材料(PointsMaterial)。
+
+方法（Methods）
+# .raycast ( raycaster, intersects )
+	得到光线投射和该线条之间的交点。 Raycaster.intersectObject 将调用该方法。
+# .clone ()
+	返回此点对象及其后代的克隆。

@@ -1,0 +1,29 @@
+构造器（Constructor）
+	LineDashedMaterial( parameters )    参数是一个使用一个或多个属性定义材料外观的对象。
+	color — 线条的十六进制颜色。缺省值为 0xffffff。
+	linewidth — 线条的宽度。缺省为 1。
+	scale — 线条中虚线部分的占比，缺省为1.
+	dashSize — 破折号（-）的大小。默认为3。
+	gapSize - 间隙的大小。默认为1。
+	vertexColors — 定义顶点如何着色。缺省是 THREE.NoColors。
+	fog — 定义材质颜色是否受全局雾设置的影响。默认是false。
+
+属性（Properties）
+通用属性请查看基类 材料(Material) 。
+# .color
+	设置线条的颜色。默认值是0xffffff。
+# .linewidth
+	控制线宽。默认值是 1.
+	由于受限于 角度层（ANGLE layer），在Windows平台上使用 WebGL，线宽将总是为1而不管设置的值。
+# .scale
+	线条中虚线部分的占比。
+# .dashSize
+	破折号（-）的大小。默认为3。
+# .gapSize
+	间隙的大小。默认为1。
+# .vertexColors
+	定义顶点如何着色。可用值为 THREE.NoColors, THREE.FaceColors 和 THREE.VertexColors。缺省值为 THREE.NoColors.
+	当使用一些特定渲染器时，此设置可能没有任何效果。
+# .fog
+	定义材质颜色是否受全局雾设置的影响。
+	当使用一些特定渲染器时，此设置可能没有任何效果。比如，该属性被 Canvas 所忽略，但是对 WebGL 有效。

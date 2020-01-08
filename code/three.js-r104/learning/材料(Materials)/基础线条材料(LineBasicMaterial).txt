@@ -1,0 +1,49 @@
+构造器（Constructor）
+	LineBasicMaterial( parameters )    参数是一个使用一个或多个属性定义材料外观的对象。
+	color — 线条的十六进制颜色。缺省值为 0xffffff。
+	linewidth — 线条的宽度。缺省为 1。
+	linecap — 定义线条端点的外观。缺省为 'round'（即圆形线头）。
+	linejoin — 定义线条接口处的外观。缺省为 'round'。
+	vertexColors — 定义顶点如何着色。缺省是 THREE.NoColors。
+	fog — 定义材质颜色是否受全局雾设置的影响。默认是false。
+
+属性（Properties）
+通用属性请查看基类 材料(Material) 。
+# .color
+	设置线条的颜色。默认值是0xffffff。
+# .linewidth
+	控制线宽。默认值是 1.
+	由于受限于 角度层（ANGLE layer），在Windows平台上使用 WebGL，线宽将总是为1而不管设置的值。
+# .linecap
+	定义线的两端的样式，可用值为 "butt", "round" 和 "square"。缺省为 'round'。可参考：Canvas Linecap中的定义和演示。
+	当使用一些特定渲染器时，此设置可能没有任何效果。比如，该属性被 WebGL 所忽略，但是对 Canvas 有效。
+# .linejoin
+	定义线连接节点的外观。可用值为 "round", "bevel" 和 "miter". 缺省是 'round'。
+	当使用一些特定渲染器时，此设置可能没有任何效果。比如，该属性被 WebGL 所忽略，但是对 Canvas 有效。
+# .vertexColors
+	定义顶点如何着色。可用值为 THREE.NoColors, THREE.FaceColors 和 THREE.VertexColors。缺省值为 THREE.NoColors.
+	当使用一些特定渲染器时，此设置可能没有任何效果。
+# .fog
+	定义材质颜色是否受全局雾设置的影响。
+	当使用一些特定渲染器时，此设置可能没有任何效果。比如，该属性被 Canvas 所忽略，但是对 WebGL 有效。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

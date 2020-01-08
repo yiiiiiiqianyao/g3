@@ -1,0 +1,51 @@
+构造器（Constructor）
+	OrthographicCamera( left, right, top, bottom, near, far )
+	left — 相机视椎体（Camera frustum）左面。
+	right — 相机视椎体（Camera frustum）右面。
+	top — 相机视椎体（Camera frustum）上面。
+	bottom — 相机视椎体（Camera frustum）下面。
+	near — 相机视椎体（Camera frustum）前面（靠近相机的这一面）。
+	far — 相机视椎体（Camera frustum）后面（远离相机的这一面）。
+
+属性（Properties）
+# .zoom
+	获取和设置相机缩放因子。
+# .left
+	相机视椎体（Camera frustum）左面
+# .right
+	相机视椎体（Camera frustum）右面.
+# .top
+	相机视椎体（Camera frustum）上面.
+# .bottom
+	相机视椎体（Camera frustum）下面.
+# .near
+	相机视椎体（Camera frustum）前面.
+# .far
+	相机视椎体（Camera frustum）后面.
+
+方法（Methods）
+# .setViewOffset ( fullWidth, fullHeight, x, y, width, height )
+	fullWidth — 多视图设置的全宽
+	fullHeight — 多视图设置的全高
+	x — 副摄像头的水平偏移
+	y — 副摄像头的垂直偏移
+	width — 副摄像头宽度
+	height — 副摄像头高度
+	该方法用于在一个较大的视椎体中设置视图偏移。这对于多窗口或多监视器/多机设置是有用的。关于如何使用它，你可以查看 远景相机(PerspectiveCamera) 中的示例。
+# .clearViewOffset ()
+	清除视图偏移。
+# .updateProjectionMatrix ()
+	更新相机投影矩阵，必须在参数发生变化后调用。
+# .clone ()
+	返回一个OrthographicCamera对象的克隆。
+# .toJSON ()
+	把相机数据转换成JSON格式。
+
+
+
+
+
+
+
+
+

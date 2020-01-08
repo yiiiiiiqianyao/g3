@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+</body>
+<script>
+    var data = [ // 这里的data是已经经过二次处理的、由平面转换来的数据，可以直接用于搭建房屋
+        { x: 0, z: 0 },
+        { x: 20, z: 0 },
+        { x: 20, z: 20 },
+        { x: 40, z: 20 },
+        { x: 40, z: 40 },
+        { x: 0, z: 40 }
+    ]
+    window.onload = function(){
+        let scene = new THREE.Scene()
+        let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer({
+            antialias:true, // 开启抗锯齿处理
+            alpha:true
+        })
+        renderer.setClearColor(new THREE.Color(0xEEEEEE))
+        renderer.setSize(window.innerWidth,window.innerHeight)
+        renderer.shadowMap.enabled = true
+        let domElement = renderer.domElement
+
+        var controller = new THREE.OrbitControls( camera, domElement )
+        camera.position.x = 80
+        camera.position.y = 80
+        camera.position.z = 80
+        camera.lookAt(scene.position)
+
+        // data.map(d=>generateWall(d)) // 根据数据和相关方法构建房间
+       
+
+        //---- function build and put plane
+        function generateWall(floorData) {
+            
+        }
+
+
+        var grid = new THREE.GridHelper( 100, 50, 0x444444, 0x888888 );
+        scene.add( grid );
+        var axesHelper = new THREE.AxesHelper( 5 );
+        scene.add( axesHelper );
+
+        document.getElementById('WebGL-output').appendChild(domElement)
+        
+        renderScene()
+        function renderScene(){
+            renderer.render(scene,camera)
+            requestAnimationFrame(renderScene)
+        }
+        window.onresize = onResize
+        function onResize(){
+            camera.aspect = window.innerWidth / window.innerHeight
+            camera.updateProjectionMatrix()
+            renderer.setSize(window.innerWidth,window.innerHeight)
+        } 
+}
+    
+</script>
+</html>

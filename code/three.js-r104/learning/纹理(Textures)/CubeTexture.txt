@@ -1,0 +1,16 @@
+Creates a cube texture made up of six images.
+
+代码示例：
+	var loader = new THREE.CubeTextureLoader();
+	loader.setPath( 'textures/cube/pisa/' );
+
+	var textureCube = loader.load( [
+		'px.png', 'nx.png',
+		'py.png', 'ny.png',
+		'pz.png', 'nz.png'
+	] );
+
+	var material = new THREE.MeshBasicMaterial( { color: 0xffffff, envMap: textureCube } );
+
+构造器（Constructor）
+	CubeTexture( images, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy )

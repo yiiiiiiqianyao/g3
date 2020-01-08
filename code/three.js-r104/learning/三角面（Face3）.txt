@@ -1,0 +1,51 @@
+实例：
+	var normal = new THREE.Vector3( 0, 1, 0 );
+	var color = new THREE.Color( 0xffaa00 );
+	var face = new THREE.Face3( 0, 1, 2, normal, color, 0 );
+
+构造器（Constructor）
+	Face3( a, b, c, normal, color, materialIndex )
+	a — 顶点索引A。
+	b — 顶点索引B。
+	c — 顶点索引C。
+	normal — 面法向量或顶点法向量数组。
+	color — 面颜色或顶点颜色的数组。
+	materialIndex — 材料索引。
+	( 顶点索引是指组成几何体的各个面的索引 )
+
+属性（Properties）
+	# .a
+顶点索引A。
+	# .b
+顶点索引B。
+	# .c
+顶点索引C。
+	# .normal
+面法向量。
+	# .color
+面颜色。
+	# .vertexNormals
+3个顶点法向量的数组。
+	# .vertexColors
+3个顶点颜色的数组。
+	# .materialIndex
+材料索引 (指向 MultiMaterial.materials).
+
+
+方法（Methods）
+# .clone ()
+	创建一个新的Face3克隆对象。
+
+
+
+
+
+
+
+
+
+
+
+
+
+

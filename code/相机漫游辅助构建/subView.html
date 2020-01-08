@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+    <script src="../src/libs/CameraHelper.js"></script>
+    <script src="./TransformControls.js"></script>
+
+    <script src="../src/common/math.js"></script>
+    <script src="../src/common/utils.js"></script>
+
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+        #controlwrwap{
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            margin: 10px;
+            border: 1px solid;
+            border-radius: 10px;
+            padding: 5px;
+            height: 120px;
+        }
+        #subView{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 150px;
+            margin: 10px;
+            border: 1px solid;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+    <div id="controlwrwap">
+        <div style="border: 1px solid;margin: 10px;border-radius: 10px;padding: 10px;cursor: pointer;" onclick="changeMode('translate')">translate</div>
+        <div style="border: 1px solid;margin: 10px;border-radius: 10px;padding: 10px;cursor: pointer;" onclick="changeMode('rotate')">rotate</div>
+    </div>
+    <div id="subView"></div>
+</body>
+<script>
+    var scene = null, camera = null, renderer = null, domElement
+    var subScene = null, subRender = null, subCamera = null, subRenderControl = null
+    
+    var mode = 'translate'
+    var canBeSelectedMeshes = []
+    var currentTransformController = null
+    var currentSelectedMesh = null
+   
+    var subView = document.getElementById('subView')
+
+    var transformControls = null, controller, controllerSaved = false, lastTarget
+    
+    var normalMaterial = new THREE.MeshNormalMaterial()
+
+    var sphere
+
+    window.onload = function(){
+        scene = new THREE.Scene()
+        subScene = new THREE.Scene()
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        renderer = new THREE.WebGLRenderer({
+            antialias:true, // 开启抗锯齿处理
+            alpha:true
+        })
+        renderer.setClearColor(new THREE.Color(0xEEEEEE))
+        renderer.setSize(window.innerWidth,window.innerHeight)
+        
+        domElement = renderer.domElement
+
+        controller = new THREE.OrbitControls( camera, domElement )
+
+        camera.position.x = -50
+        camera.position.y = 50
+        camera.position.z = 50
+        camera.lookAt(scene.position)
+
+
+        sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(1, 16, 16), normalMaterial)
+        sphere.position.copy(new THREE.Vector3(15, 15, 15))
+        sphere.userData.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100)
+        sphere.userData.helper = new THREE.CameraHelper(sphere.userData.camera)
+        sphere.add(sphere.userData.camera)
+        sphere.userData.camera.lookAt(0,0,0)
+
+        subCamera = sphere.userData.camera//new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100)
+        subCamera.position.copy(sphere.position)
+        
+        scene.add(subCamera)
+        scene.add(sphere.userData.helper)
+        scene.add(sphere)
+
+        // subCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100)
+        // subCamera.position.copy(new THREE.Vector3(15, 15, 15))
+
+        sphere2 = new THREE.Mesh(new THREE.SphereBufferGeometry(5, 16, 16), normalMaterial)
+        sphere2.position.copy(new THREE.Vector3(-15, 15, -15))
+        sphere2.userData.index = 2
+        scene.add(sphere2)
+
+        var sphere3 = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5, 16, 16), normalMaterial)
+        sphere3.position.copy(new THREE.Vector3(15, 15, -15))
+        sphere3.userData.index = 3
+        scene.add(sphere3)
+        var sphere4 = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5, 16, 16), normalMaterial)
+        sphere4.position.copy(new THREE.Vector3(15, -15, -15))
+        sphere4.userData.index = 4
+        scene.add(sphere4)
+       
+        var grid = new THREE.GridHelper( 50, 50, 0x444444, 0x888888 );
+        scene.add( grid );
+        
+        var axesHelper = new THREE.AxesHelper( 5 );
+        scene.add( axesHelper );
+
+        document.getElementById('WebGL-output').appendChild(domElement)
+        
+        renderScene()
+        initSubRender()
+        window.onresize = onResize
+        function onResize(){
+            camera.aspect = window.innerWidth / window.innerHeight
+            camera.updateProjectionMatrix()
+            renderer.setSize(window.innerWidth,window.innerHeight)
+        }
+    }
+
+    function renderScene(){
+
+        renderer.render(scene, camera)
+        requestAnimationFrame(renderScene)
+    }
+
+    function renderSubRender() {
+        subRender.render(scene, subCamera) // subCamera camera
+        subRenderControl = requestAnimationFrame(renderSubRender)
+    }
+
+    function initSubRender() {
+        subRender = new THREE.WebGLRenderer({
+            antialias:true, // 开启抗锯齿处理
+            alpha:true
+        })
+        subRender.setSize(subView.clientWidth,subView.clientHeight)
+        subView.appendChild(subRender.domElement)
+
+        subView.style.zIndex = '1'
+        new THREE.OrbitControls( subCamera, subRender.domElement )
+        renderSubRender()
+
+        subRender.domElement.onmousedown = function() {
+            let posCopyControl = null
+            copyPosition()
+            
+            subRender.domElement.onmouseup = function() {
+                cancelAnimationFrame(posCopyControl)
+                posCopyControl = null
+            }
+            function copyPosition() {
+                sphere.position.copy(subCamera.position)
+                posCopyControl = requestAnimationFrame(copyPosition)
+            }
+        }
+    }
+
+    function changeMode(targetMode){
+        if(targetMode == 'rotate') {
+            subView.style.zIndex = '1'
+            if(subRenderControl == null) {
+                renderSubRender()
+            }
+        }else{
+            if(subRenderControl !== null) {
+               
+                cancelAnimationFrame(subRenderControl)
+                subRenderControl = null
+            }
+            subView.style.zIndex = '-1'
+        }
+        transformControls.setMode(targetMode)
+        mode = targetMode
+    }
+    
+</script>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+
+    <script src="../src/loaders/OBJLoader.js"></script>
+    <script src="../src/loaders/MTLLoader.js"></script>
+
+    <script src="../src/common/utils.js"></script>
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+</body>
+<script>
+    window.onload = function(){
+        let scene = new THREE.Scene()
+        let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer({
+            antialias:true, // 开启抗锯齿处理
+            alpha:true
+        })
+        renderer.setClearColor(new THREE.Color(0xEEEEEE))
+        renderer.setSize(window.innerWidth,window.innerHeight)
+        renderer.shadowMap.enabled = true
+        let domElement = renderer.domElement
+
+        var adult_man = 17.5
+
+        var controller = new THREE.OrbitControls( camera, domElement )
+        camera.position.x = -50
+        camera.position.y = 50
+        camera.position.z = 50
+        camera.lookAt(scene.position)
+
+        scene.add(new THREE.AmbientLight(0x444444))
+        var light = new THREE.PointLight(0xffffff)
+        light.position.set(1000,1000,1000)
+        var l2 = light.clone()
+        l2.position.set(-1000,-1000,-1000)
+        scene.add(light)
+        scene.add(l2)
+
+        var axesHelper = new THREE.AxesHelper( 30 );
+        scene.add( axesHelper );  
+
+        var grid = new THREE.GridHelper( 60, 60, 0x444444, 0x888888 );
+	    scene.add( grid );
+        scene.add( new THREE.BoxHelper( scene , new THREE.Color( 0xFF3030 ) ) )
+
+        var objLoader = new THREE.OBJLoader()
+        objLoader.setPath('../model/')
+        objLoader.load('library.obj', function (object) {
+            console.log(object)
+            object.userData.place = 'ground'
+            autoAdjustScale(object, 10)
+            if(object.userData.place == 'ground'){
+                autoPutGround(object)
+            }
+            
+
+            scene.add(new THREE.BoxHelper(object, new THREE.Color('#0000ff')))
+            scene.add(object)
+        })
+
+        document.getElementById('WebGL-output').appendChild(domElement)
+        
+        renderScene()
+        function renderScene(){
+            renderer.render(scene,camera)
+            requestAnimationFrame(renderScene)
+        }
+        window.onresize = onResize
+        function onResize(){
+            camera.aspect = window.innerWidth / window.innerHeight
+            camera.updateProjectionMatrix()
+            renderer.setSize(window.innerWidth,window.innerHeight)
+        }
+        
+}
+    
+</script>
+</html>

@@ -1,0 +1,16 @@
+构造器（Constructor）
+	HemisphereLight( skyColor, groundColor, intensity )
+	skyColor — Numeric value of the RGB sky color.
+	groundColor — Numeric value of the RGB ground color.
+	intensity — Numeric value of the light's strength/intensity.
+
+属性（Properties）
+See the base Light class for common properties.
+# .groundColor
+	Light's ground color.
+
+方法（Methods）
+See the base Light class for common methods.
+# .copy ( source )
+
+	Copies value of source to this HemisphereLight object.

@@ -1,0 +1,22 @@
+基于性能的原因，改变几何体(Geometry)的某些属性不会引起浏览器对几何体(Geometry)的重新绘制。
+THREE.js会缓存一些 数据，例如几何体的顶点和面的信息，修改这些属性的时候需要通知THREE.js去更新几何体。
+
+下面这些属性的变动需要通知THREE.js更新 
+1. geometry.vertices 
+2. geometry.faces 
+3. geometry.morphTargets 
+4. geometry.faceVertexUvs 
+5. geometry.faces[i].normal and geometry.vertices[i].normal 
+6. geometry.faces[i].color and geometry.vertices[i].color 
+7. geometry.vertices[i].tangent 
+8. geometry.lineDistances
+
+每次修改完几何体的属性后都要通知一次
+colorsNeedUpdate ： 	geometry.faces[i].color and geometry.vertices[i].color发生变化的时候设置为true
+verticesNeedUpdate：	geometry.vertices发生变化的时候设置为true
+elementsNeedUpdate：	geometry.faces发生变化的时候设置为true
+morphTargetsNeedUpdate：	geometry.morphTargets发生变化的时候设置为true
+uvsNeedUpdate：		geometry.faceVertexUvs发生变化的时候设置为true
+normalsNeedUpdate：	geometry.faces[i].normal and geometry.vertices[i].normal发生变化的时候设置true
+tangentsNeedUpdate：	geometry.vertices[i].tangent发生变化的时候设置为true
+needsUpdate：		我们也可以动态的修改纹理和材质，材质发生改变的时候将material.needsUpdate设置为true来通知THREE.js重新进行计算绘制。

@@ -1,0 +1,26 @@
+构造器（Constructor）
+Camera()
+
+构造器将初始化如下属性：matrixWorldInverse 和 projectionMatrix.
+属性（Properties）
+	# .matrixWorldInverse
+		这是matrixWorld的逆矩阵。MatrixWorld包含相机的世界变换矩阵。
+	# .projectionMatrix
+		投影变换矩阵。
+
+方法（Methods）
+	# .getWorldDirection ( vector )
+		vector — (可选)
+
+		该方法返回代表相机方向的一个在世界空间中的矢量。
+	# .lookAt ( vector )
+		vector — 观察点
+
+		该函数设定相机在全局空间中的位置。
+	# .clone ( camera )
+		camera — 要克隆的相机
+
+		返回一个相机的克隆。
+
+源代码
+src/cameras/Camera.js

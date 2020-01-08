@@ -1,0 +1,39 @@
+代码示例：
+	var dir = new THREE.Vector3( 1, 0, 0 );
+	var origin = new THREE.Vector3( 0, 0, 0 );
+	var length = 1;
+	var hex = 0xffff00;
+
+	var arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex );
+	scene.add( arrowHelper );
+
+构造器（Constructor）
+	ArrowHelper(dir, origin, length, hex, headLength, headWidth )
+	dir -- Vector3 -- direction from origin. Must be a unit vector. 
+	origin -- Vector3 
+	length -- scalar 
+	hex -- hexadecimal value to define color ex:0xffff00
+	headLength -- The length of the head of the arrow
+	headWidth -- The length of the width of the arrow
+
+	This creates an arrow starting in origin in the direction dir for a certain length. 
+	It is also possible to change color.
+
+属性（Properties）
+# .line
+	Contains the line part of the arrowHelper.
+# .cone
+	Contains the cone part of the arrowHelper.
+
+方法（Methods）
+# .setColor (hex)
+	hex -- The hexadicmal value of the color
+	Sets the color of the arrowHelper.
+# .setLength (length, headLength, headWidth)
+	length -- The desired length
+	headLength -- The length of the head of the arrow
+	headWidth -- The length of the width of the arrow
+	Sets the length of the arrowhelper.
+# .setDirection (dir)
+	dir -- The desired direction. Must be a unit vector.
+	Sets the direction of the arrowhelper.

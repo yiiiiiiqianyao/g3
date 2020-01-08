@@ -1,0 +1,35 @@
+精灵平面（Sprite）是一个在3D场景中总是面对着相机的平面。
+
+	精灵平面不投射阴影，设置 castshadow = true 将没有效果。
+
+代码示例：
+	var map = new THREE.TextureLoader().load( "sprite.png" );
+                var material = new THREE.SpriteMaterial( { map: map, color: 0xffffff, fog: true } );
+                var sprite = new THREE.Sprite( material );
+                scene.add( sprite );
+
+构造器（Constructor）
+	Sprite( material )
+	material — 材料(Material) 的一个实例(可选)。
+	This 创建一个新的 sprite with an specific material.
+
+属性（Properties）
+# .material
+	一个 材料(Material) 实例，定义该对象的外观。缺省是 SpriteMaterial ，一个白色平面。
+	方法（Methods）
+# .clone ()
+	返回这个精灵对象及其后代的克隆。
+
+
+
+
+
+
+
+
+
+
+
+
+
+

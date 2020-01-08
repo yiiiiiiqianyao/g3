@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+    <script src="../src/libs/CameraHelper.js"></script>
+    <script src="./TransformControls.js"></script>
+
+    <script src="../src/common/math.js"></script>
+    <script src="../src/common/utils.js"></script>
+
+    <style>
+        body{
+            margin: 0;
+            overflow: hidden;
+        }
+        #controlwrwap{
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            margin: 10px;
+            border: 1px solid;
+            border-radius: 10px;
+            padding: 5px;
+            height: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+    <div id="controlwrwap">
+        <div style="border: 1px solid;margin: 10px;border-radius: 10px;padding: 10px;cursor: pointer;" onclick="changeMode('translate')">translate</div>
+        <div style="border: 1px solid;margin: 10px;border-radius: 10px;padding: 10px;cursor: pointer;" onclick="changeMode('rotate')">rotate</div>
+    </div>
+</body>
+<script>
+
+    var canBeSelectedMeshes = []
+    var currentTransformController = null
+    var currentSelectedMesh = null
+   
+    var transformControls = null, controller
+    
+    var normalMaterial = new THREE.MeshNormalMaterial()
+    window.onload = function(){
+        let scene = new THREE.Scene()
+        let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer({
+            antialias:true, // 开启抗锯齿处理
+            alpha:true
+        })
+        renderer.setClearColor(new THREE.Color(0xEEEEEE))
+        renderer.setSize(window.innerWidth,window.innerHeight)
+        renderer.shadowMap.enabled = true
+        let domElement = renderer.domElement
+
+        controller = new THREE.OrbitControls( camera, domElement )
+
+        transformControls = new THREE.TransformControls(camera, domElement)
+       
+        scene.add(transformControls)
+        camera.position.x = -30
+        camera.position.y = 40
+        camera.position.z = 30
+        camera.lookAt(scene.position)
+
+        var sphere = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5,16,16), normalMaterial)
+        sphere.position.copy(new THREE.Vector3(5,5,5))
+        sphere.userData.index = 1
+        canBeSelectedMeshes.push(sphere)
+        scene.add(sphere)
+
+        var sphere2 = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5,16,16), normalMaterial)
+        sphere2.position.copy(new THREE.Vector3(-5,5,-5))
+        sphere2.userData.index = 2
+        canBeSelectedMeshes.push(sphere2)
+        scene.add(sphere2)
+
+        var geometry = new THREE.Geometry()
+        geometry.vertices = []
+        geometry.vertices.push(
+            new THREE.Vector3().copy(sphere.position),
+            new THREE.Vector3().copy(sphere2.position)
+        );
+        var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: 0x0000ff}))
+        scene.add(line)
+
+        domElement.onmousedown = function(e){
+            
+            var coords = tranformMouseCoord(e.clientX, e.clientY, domElement)
+            var intersects = getSelectedMeshes(coords, camera, canBeSelectedMeshes)
+            // console.log(intersects.length)
+            if(intersects.length > 0){
+               
+                var item = intersects[0].object
+                
+                if(currentSelectedMesh == null){ // 初次选中
+                   
+                    currentSelectedMesh = item
+                    transformControls.attach(item)
+                    controller.enabled = false
+                }else if(item.userData.index == currentSelectedMesh.userData.index){ // 再次选中同一个相机
+                   
+                    transformControls.detach()
+                    currentSelectedMesh = null
+                    controller.enabled = true
+                }else{  // 选中不同的相机
+                  
+                    currentSelectedMesh = item
+                    transformControls.detach()
+                    transformControls.attach(item)
+                    controller.enabled = false
+                }
+            }else {
+                if(currentSelectedMesh !== null){
+                domElement.onmousemove = function(){
+                    var p1 = new THREE.Vector3().copy(sphere.position)
+                    var p2 = new THREE.Vector3().copy(sphere2.position)
+                    updateLine(line, [p1, p2])
+                    domElement.onmouseup = function(ue){
+                        domElement.onmousemove = null
+                    }
+                }
+            }
+            }
+            
+            
+        }
+
+       
+        var grid = new THREE.GridHelper( 30, 30, 0x444444, 0x888888 );
+	    scene.add( grid );
+
+        document.getElementById('WebGL-output').appendChild(domElement)
+        
+        renderScene()
+        function renderScene(){
+            renderer.render(scene,camera)
+            requestAnimationFrame(renderScene)
+        }
+        window.onresize = onResize
+        function onResize(){
+            camera.aspect = window.innerWidth / window.innerHeight
+            camera.updateProjectionMatrix()
+            renderer.setSize(window.innerWidth,window.innerHeight)
+        }
+        
+    }
+
+    function updateLine(line, newVertices){
+        for(var i = 0;i < newVertices.length;i++) {
+            line.geometry.vertices[i].x = newVertices[i].x
+            line.geometry.vertices[i].y = newVertices[i].y
+            line.geometry.vertices[i].z = newVertices[i].z
+        }
+        line.geometry.verticesNeedUpdate = true
+    }
+
+    function changeMode(mode){
+        transformControls.setMode(mode)
+    }
+    
+</script>
+</html>

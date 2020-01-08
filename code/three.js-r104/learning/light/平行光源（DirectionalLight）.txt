@@ -1,0 +1,33 @@
+影响使用 兰伯特网孔材料(MeshLambertMaterial) 或 Phong网孔材料(MeshPhongMaterial) 的对象。
+
+代码例子：
+	// 从正上方照射过来的白色平行光，0.5的光强。
+
+	var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+	directionalLight.position.set( 0, 1, 0 );
+	scene.add( directionalLight );
+
+构造器（Constructor）
+	DirectionalLight( hex, intensity )
+	hex -- 光源颜色的RGB数值。
+	intensity -- 光源强度的数值。
+	创建一个光照，从一个特定的方向，而不是从一个特定的位置。这个光看起来就像光源位于
+	无限远处，因此它产生的光线都是平行的。 最好的类比是一个像太阳一样的光源：太阳是如此遥远，所有的阳光照射到物体上都几乎来自同一个角度。
+
+属性（Properties）
+通用属性可查看基类 Light 。
+# .target
+	用于阴影相机定位的目标。
+# .shadow
+	该属性存储渲染光照阴影的所有相关信息。
+# .castShadow
+	如果设置为true，光照将产生动态阴影。*警告*：这是代价高昂的，需要调整以使得阴影看起来是正确的。
+	缺省值 — false.
+
+方法（Methods）
+通用方法可查看基类 Light 。
+# .copy ( source )
+
+	复制 source 的值到这个平行光源对象。
+
+

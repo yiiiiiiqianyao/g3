@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        html{
+            height: 100%;
+        }
+        body{
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffff00;
+        }
+        #leftWrap, #rightWrap{
+            width: 20vw;
+            height: 40vw;
+            background-color: aqua;
+        }
+        #canWrap {
+            position: relative;
+            border-top: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+            width: 60vw;
+            height: 40vw;
+            background-color: #fff;
+        }
+        #canWrap .can{
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .btn{
+            border: 1px solid #0000ff;
+            padding: 5px;
+            cursor: pointer;
+        }
+        .btn:hover{
+            background-color: aquamarine;
+        }
+    </style>
+</head>
+<body>
+    <div id="leftWrap"></div>
+    <div id="canWrap">
+        <canvas id="bgplane" class="can"></canvas>
+        <canvas id="drawplane" class="can"></canvas>
+    </div>
+    <div id="rightWrap">
+        <div class="btn" onclick="freshCanvas()">fresh</div>
+    </div>
+</body>
+<script>
+    let grid_widthCount = 90 // 背景网格线水平格数
+    let grid_heightCout = 60 // 背景网格线垂直格数
+    let grid_wid_len = null  // 背景网格线水平格宽度
+    let grid_hei_len = null  // 背景网格线水平格高度
+
+    let drawCtx, bgctx // 上下文对象
+    let drawCanvas = document.getElementById('drawplane')
+
+    /*
+    {
+        x: 10,
+        y: 10
+    }
+    */
+    let drawData = [] // 记录绘画的点的位置
+
+    initBgGrid() // 初始化背景网格线
+    initDrawConfig()
+    
+    function initDrawConfig() { // 初始化绘制画布的一些配置
+        
+        let drawwidth = drawCanvas.clientWidth
+        let drawheight = drawCanvas.clientHeight
+        drawCanvas.width = drawwidth
+        drawCanvas.height = drawheight
+        drawCtx = drawCanvas.getContext('2d')
+
+        // drawCanvas.addEventListener('mousedown', drawMouseDown)
+        drawCanvas.addEventListener('click', handleClick) // click
+        // drawCanvas.addEventListener('mousemove', handleMove)
+        drawCanvas.addEventListener('mouseup', handleUp)
+        // drawCanvas.addEventListener('mouseout', handleOut)
+    }
+
+    let isFinished = false // 用于标记用户的一次绘制是否结束
+
+    function handleClick(e) { // 鼠标点击时做的动作
+        if(isFinished) {
+            console.log('has finished')
+            return
+        }
+        let plane = e.target
+        let { x, y } = plane.getBoundingClientRect()
+        let px = e.clientX - x
+        let py = e.clientY - y 
+        let lastPoint = drawData[drawData.length - 1]
+
+        if(drawData.length > 0) { // 除了第一个点之外，在绘制其他的点的时候都需要对点的位置进行矫正
+            let standedPoint = adjustPointPos(lastPoint, { x: px, y: py })
+            drawData.push(standedPoint) // 加点
+        }else{
+            drawData.push({ // 加点
+                x: px,
+                y: py
+            })
+        }
+        drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
+        drawDataToScreen()
+        
+        drawCanvas.addEventListener('mousemove', handleMove)
+    }
+
+    function handleMove(me) { // 在鼠标移动时做的动作
+        let plane = me.target
+        let { x, y } = plane.getBoundingClientRect()
+        let mx = me.clientX - x
+        let my = me.clientY - y 
+        let lastPoint = drawData[drawData.length - 1]
+        drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
+        drawDataToScreen()
+        drawLine(drawCtx, { x: mx, y: my }, { x: lastPoint.x, y: lastPoint.y })
+        drawPoint(drawCtx, mx, my, true)
+        if(drawData.length > 2 && pointsDistance(drawData[0], { x: mx, y: my }) < 16) {
+            // let helpPoint = { x: lastPoint.x, y: drawData[0].y }
+            let helpPoint = adjustLastPointPos()
+            drawCtx.strokeStyle = '#00ffff'
+            drawLine(drawCtx, helpPoint, lastPoint)
+            drawLine(drawCtx, helpPoint, drawData[0])
+            drawCtx.strokeStyle = '#000000'
+        }
+    }
+
+    function handleUp(ue) { // 在鼠标抬起时做的动作
+        let plane = ue.target
+        let { x, y } = plane.getBoundingClientRect()
+        let ux = ue.clientX - x
+        let uy = ue.clientY - y 
+        
+        if(drawData.length > 2 && pointsDistance(drawData[0], { x: ux, y: uy }) < 16) { // 至少已经存在三个点 最少四个点构成一个房间
+            let lastPoint = drawData[drawData.length - 1]
+            let firstPoint = drawData[0]
+
+            let p = adjustLastPointPos()
+            lastPoint.x = p.x
+            lastPoint.y = p.y
+          
+            drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
+            drawDataToScreen()
+            drawLine(drawCtx, { x: lastPoint.x, y: lastPoint.y }, { x: firstPoint.x, y: firstPoint.y })
+            isFinished = true
+        }
+
+        drawCanvas.removeEventListener('mousemove', handleMove)
+    }
+
+    function freshCanvas() { // 刷新画布
+        drawData = []
+        isFinished = false
+        drawCtx.clearRect(0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight)
+    }
+
+    function drawDataToScreen() { // 将数据中的点画到画布上 
+        for(let i = 0;i < drawData.length;i++) {
+            let point = drawData[i]
+            let nextPoint = drawData[i+1]
+            drawPoint(drawCtx, point.x, point.y)
+            if(nextPoint !== undefined) { // 当存在下一个顶点的时候
+                drawLine(drawCtx, { x: point.x, y: point.y }, { x: nextPoint.x, y: nextPoint.y })
+            }
+        }
+    }
+
+    function drawPoint(ctx, x, y, s = false) { // 根据传入的坐标在指定的上下文绘制点, s 参数表示当前点是否被选中，默认未被选中
+   
+        ctx.beginPath()
+        if(s) {
+            ctx.fillStyle = '#ff0000'
+            ctx.strokeStyle = '#ff0000'
+        }
+        ctx.arc(x, y, 2, 0, 2*Math.PI)
+        ctx.fill()
+        ctx.beginPath()
+        ctx.arc(x, y, 4, 0, 2*Math.PI)
+        ctx.stroke()
+        if(s) {
+            ctx.fillStyle = '#000000'
+            ctx.strokeStyle = '#000000'
+        }
+    }
+
+    function adjustLastPointPos() { // 调整最后一个点的位置，以适应直角
+        let lastPoint = drawData[drawData.length - 1]
+        let firstPoint = drawData[0]
+        let p = { x: lastPoint.x, y: lastPoint.y }
+        if(drawData[0].x == drawData[1].x) {        // 起始线段垂直
+            p.y = firstPoint.y
+        }else if(drawData[0].y == drawData[1].y){   // 起始线段水平
+            p.x = firstPoint.x
+        }
+        return p
+    }
+
+    function adjustPointPos(lastPoint, currentPoint) { // 调整绘制点的位置 （主要是控制直角墙面， 暂时不考虑斜角）
+        let distance = pointsDistance(lastPoint, currentPoint)
+        let xLen = Math.abs(currentPoint.x - lastPoint.x)
+        let yLen = Math.abs(currentPoint.y - lastPoint.y)
+
+        if(currentPoint.x >= lastPoint.x && currentPoint.y >= lastPoint.y) {        // 右上
+            if(xLen > yLen) {
+                return { x: lastPoint.x + distance, y: lastPoint.y }
+            }else {
+                return { x: lastPoint.x, y: lastPoint.y + distance }
+            }
+        }else if(currentPoint.x >= lastPoint.x && currentPoint.y < lastPoint.y){    // 右下
+            if(xLen > yLen) {
+                return { x: lastPoint.x + distance, y: lastPoint.y }
+            }else {
+                return { x: lastPoint.x, y: lastPoint.y - distance }
+            }
+        }else if(currentPoint.x < lastPoint.x && currentPoint.y <= lastPoint.y){    // 左下
+            if(xLen > yLen) {
+                return { x: lastPoint.x - distance, y: lastPoint.y }
+            }else {
+                return { x: lastPoint.x, y: lastPoint.y - distance }
+            }
+        }else if(currentPoint.x < lastPoint.x && currentPoint.y > lastPoint.y){     // 左上
+            if(xLen > yLen) {
+                return { x: lastPoint.x - distance, y: lastPoint.y }
+            }else {
+                return { x: lastPoint.x, y: lastPoint.y + distance }
+            }
+        }
+    }
+ 
+    function pointsDistance(p1, p2) { // 返回两点之间的距离
+        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2))
+    }
+    
+    function initBgGrid() { // 初始化背景的网格线
+        // 背景的宽高是包围框的两倍
+        let bgcanvas = document.getElementById('bgplane') 
+        let bgwidth = bgcanvas.clientWidth*2
+        let bgheight = bgcanvas.clientHeight*2
+        bgcanvas.width = bgwidth
+        bgcanvas.height = bgheight
+        bgctx = bgcanvas.getContext('2d')
+        drawBgGrid(bgctx, bgwidth, bgheight)
+    }
+
+    function drawBgGrid( bgctx, bgwidth, bgheight) { // 绘制背景的网格线
+        bgctx.globalAlpha = 0.3
+        let widthCount = grid_widthCount, widthLen = bgwidth / widthCount
+        let heightCount = grid_heightCout, heightLen = bgheight / heightCount
+
+        for(let i = 0;i < widthCount;i++) { // 横线
+            drawLine(bgctx, { x: widthLen * i, y: 0 }, { x: widthLen * i, y: bgheight } )
+        }
+
+        for(let j = 0;j < heightCount;j++) { // 竖线
+            drawLine(bgctx, { x: 0, y: heightLen * j }, { x: bgwidth, y: heightLen * j } )
+        }
+        bgctx.globalAlpha = 1
+    }
+
+    function drawLine(ctx, from, to) { // 从指定的上下文中，根据传入的两个点的坐标画线
+        ctx.beginPath()
+        ctx.moveTo(from.x, from.y)
+        ctx.lineTo(to.x, to.y)
+        ctx.stroke()
+    }
+</script>
+</html>
