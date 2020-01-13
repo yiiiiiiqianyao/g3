@@ -7,6 +7,7 @@
     <title>Document</title>
     <script src="../src/three.js"></script>
     <script src="../src/controller/OrbitControls.js"></script>
+    <script src="../src/common/utils.js"></script>
     <style>
         body{
             margin: 0;
@@ -22,7 +23,7 @@
 <script>
     window.onload = function(){
         let scene = new THREE.Scene()
-        let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
         let renderer = new THREE.WebGLRenderer({
             antialias:true, // 开启抗锯齿处理
             alpha:true
@@ -38,7 +39,15 @@
         camera.position.z = 80
         camera.lookAt(scene.position)
 
-        data.map(d=>generateWall(d)) // 根据数据和相关方法构建房间
+        // data.map(d=>generateWall(d)) // 根据数据和相关方法构建房间
+        let wallGroup = new THREE.Group()
+        for(let i = 0;i < data.length;i++) {
+            generateWall(data[i])
+        }
+        let housecenter = getObjectCenter(wallGroup)
+       
+        wallGroup.position.set(-housecenter.x, 0, -housecenter.z)
+        scene.add(wallGroup)
        
         function generateWall(wallData) {
             let shape = new THREE.Shape() 
@@ -72,7 +81,8 @@
                 mesh.rotation.x = wallData.rotation.x
                 mesh.rotation.y = wallData.rotation.y
                 mesh.type = item.type
-                scene.add(mesh)
+                // scene.add(mesh)
+                wallGroup.add(mesh)
             }
 
             let geometry = new THREE.ShapeGeometry( shape ) // make wall
@@ -83,7 +93,8 @@
             mesh.rotation.y = wallData.rotation.y
             mesh.type = wallData.type
 
-            scene.add(mesh)
+            // scene.add(mesh)
+            wallGroup.add(mesh)
         }
 
         var grid = new THREE.GridHelper( 100, 50, 0x444444, 0x888888 );

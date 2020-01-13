@@ -49,7 +49,11 @@
     </style>
 </head>
 <body>
-    <div id="leftWrap"></div>
+    <div id="leftWrap">
+        <div class="btn" onclick="changeType('sidewall')">sidewall</div>
+        <div class="btn" onclick="changeType('insidewall')">insidewall</div>
+        <div class="btn" onclick="outData()">out data</div>
+    </div>
     <div id="canWrap">
         <canvas id="bgplane" class="can"></canvas>
         <canvas id="drawplane" class="can"></canvas>
@@ -68,6 +72,7 @@
     let drawCanvas = document.getElementById('drawplane')
 
     let isFinished = false // 用于标记用户的一次绘制是否结束
+    let type = 'sidewall' // sidewall - insidewall - win - door
 
     /*
     {
@@ -92,8 +97,6 @@
         drawCanvas.addEventListener('mouseup', handleUp)
     }
 
-    
-
     function handleClick(e) { // 鼠标点击时做的动作
         
         let plane = e.target
@@ -106,11 +109,13 @@
 
         if(drawData.length > 0) { // 除了第一个点之外，在绘制其他的点的时候都需要对点的位置进行矫正
             let standedPoint = adjustPointPos(lastPoint, { x: px, y: py })
+            standedPoint.type = type
             drawData.push(standedPoint) // 加点
         }else{
             drawData.push({ // 加点
                 x: px,
-                y: py
+                y: py,
+                type
             })
         }
         drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
@@ -321,6 +326,27 @@
         ctx.moveTo(from.x, from.y)
         ctx.lineTo(to.x, to.y)
         ctx.stroke()
+    }
+
+    function outData() { // 输出当前制图的数据
+        let xArr = [], yArr = []
+        for(let i = 0;i < drawData.length;i++) {
+            xArr.push(drawData[i].x)
+            yArr.push(drawData[i].y)
+        }
+        let minX = Math.min(...xArr)
+        let minY = Math.min(...yArr)
+        console.log(minX, xArr)
+        console.log(drawData.map(d => {
+            d.x -= minX
+            d.y -= minY
+            return d
+        }))
+    }
+
+    function changeType(type) { // 改变当前正在绘制的墙壁的类型
+        console.log(type)
+        type = type
     }
 </script>
 </html>

@@ -152,7 +152,7 @@
             rotation: { x: 0, y: -3*Math.PI/2 }
         },
         {
-            type: 'sideWall',
+            type: 'insideWall',
             children: [
                 {
                     type: 'door',
@@ -176,7 +176,7 @@
             rotation: { x: 0, y: 0 }
         },
         {
-            type: 'sideWall',
+            type: 'insideWall',
             children: [
                 {
                     type: 'door',
@@ -225,6 +225,7 @@
             generateWall(data[i])
         }
         let housecenter = getObjectCenter(wallGroup)
+        // console.log(housecenter)
         wallGroup.position.set(-housecenter.x, 0, -housecenter.z)
         scene.add(wallGroup)
         // console.log(housecenter)
