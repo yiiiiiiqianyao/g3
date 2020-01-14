@@ -62,8 +62,8 @@ let insideWalls = [
         children: [
             {
                 type: 'door',
-                start: { x: 5, y: 20 },
-                end: { x: 15, y: 20 }
+                start: { x: 0, y: 20 },
+                end: { x: 10, y: 20 }
             }
         ],
         rotation: 0
@@ -75,8 +75,8 @@ let insideWalls = [
         children: [
             {
                 type: 'door',
-                start: { x: 15, y: 20 },
-                end: { x: 5, y: 20 }
+                start: { x: 10, y: 20 },
+                end: { x: 0, y: 20 }
             }
         ],
         rotation: -Math.PI

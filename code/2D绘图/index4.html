@@ -57,7 +57,11 @@
 <body>
     <h3 id="currentType">sidewall</h3>
     <div id="leftWrap">
-        <div class="btn" onclick="changeType('sidewall')">sidewall</div>
+        <div class="btn" onclick="changeType('sidewall')">
+            sidewall
+            <div class="sideEdit" style="display: none;">len: <input id="sideWallLen" type="number"><button onclick="setCurrentSideWallLen()">sure</button></div>
+            <div class="sideEdit" style="display: none;"><button onclick="deleteSidePoint()">delete side point</button></div>
+        </div>
         <div class="btn" onclick="changeType('insidewall')">insidewall</div>
         <div class="btn" onclick="changeType('win')">win</div>
         <div class="btn" onclick="changeType('door')">door</div>
@@ -80,6 +84,7 @@
     let wrap = document.getElementById('canWrap')
     let wrapWidth = wrap.clientWidth
     let wrapHeight = wrap.clientHeight // 画布基准大小
+    // console.log(wrapWidth/wrapHeight)
 
     let drawCtx, bgctx // 上下文对象
     let drawCanvas = document.getElementById('drawplane')
@@ -94,9 +99,11 @@
 
     let currentWin = null // 当前的窗户
     let currentDoor = null// 当前的门
+    let currentSidePoint = null // 当前选中的外墙壁的节点
 
     let sidewallData = [] // 记录绘画的点的位置 x - y - type
     let insidewallData = [] // x - y - type - inline(l1.x l1.y - l2.x l2.y)
+    let canInsertInsideWall = true // 当前能否插入内墙壁的值
     let insideWallItem = null // 内墙壁的数据是一段一段记录的，所以需要一个变量来保存一段墙壁的起点
     let winData = []    // 存放窗户的信息 主要用于canvas的绘图用
     // { wp1: p, wp2: {x: p.x, y: p.y + len}, l1, l2 }
@@ -128,16 +135,19 @@
         let py = e.clientY - y 
        
         if(currentType.type == 'sidewall') { // 当前绘制外墙
-            if(isSideFinished) return
+            if(isSideFinished){ // 如果当前对于外墙壁的绘制已经结束 那么就无法再次进入对外墙壁的操作
+                return
+            } 
             let lastPoint = sidewallData[sidewallData.length - 1]
+            
             if(sidewallData.length > 0) { // 除了第一个点之外，在绘制其他的点的时候都需要对点的位置进行矫正
                 let standedPoint = adjustPointPos(lastPoint, { x: px, y: py})
                 standedPoint.type = 'sidewall'
                 standedPoint.rotation = getPointRotation(lastPoint, standedPoint)
                 standedPoint.children = []
-                // isNewSideWallUseful(lastPoint, standedPoint, sidewallData)
                 if(isNewSideWallUseful(lastPoint, standedPoint, sidewallData)) { // 当前新增点有效
                     sidewallData.push(standedPoint) // 加点
+
                 }
                 // sidewallData.push(standedPoint) // 加点
             }else{
@@ -147,6 +157,11 @@
                     type: currentType.type,
                     children: []
                 })
+            }
+            if(currentSidePoint !== null) {
+                sidewallData[sidewallData.length - 1] = currentSidePoint
+                currentSidePoint = null
+                quitSidePointEdit() // 取消外墙壁节点编辑状态
             }
             drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
             drawDataToScreen()
@@ -159,7 +174,7 @@
             let selectedPointResult = isSelectPoint({ x: px, y: py })
             
             if(selectedPointResult !== null) { // 用户选中了现有墙壁的节点
-                if(insideWallItem !== null) { // 用户在完成绘制一段内墙壁时选择的第二个点也在
+                if(insideWallItem !== null) { // 用户在完成绘制一段内墙壁时选择的第二个点也在现有墙壁的节点上
                     // if(pointsDistance(insideWallItem.start, { x: selectedPointResult.x, y: selectedPointResult.y }) > 8){ // 没有再次选中当前内墙壁的起始点时取消当前内墙壁的绘制
                     //     console.log(selectedPointResult)
                     // }
@@ -170,16 +185,14 @@
                         end: {}
                     }
                 }
-            }else {
+            }else { // 用户没有选中现有的墙壁节点
                 if(selectWallResult.length > 0) { // 当前用户选中了一段墙
                  
                     let insidePoint = getInLinePoint(...selectWallResult) // 选中墙的垂足
                     if(insideWallItem !== null) { // 这一段内墙壁已经选中一个点 且再次选中的点在墙壁上
                     
                         let standedPoint = adjustPointPos(insideWallItem.start, { x: insidePoint.x, y: insidePoint.y}) // 调整后的点
-                        // console.log(pointsDistance(insideWallItem.start, { x: standedPoint.x, y: standedPoint.y }))
-                        if(pointsDistance(insideWallItem.start, { x: standedPoint.x, y: standedPoint.y }) > 8){ // 没有再次选中当前内墙壁的起始点时取消当前内墙壁的绘制
-                            // console.log(isNewInSideWallUseful(insideWallItem.start, standedPoint))
+                        if(canInsertInsideWall && pointsDistance(insideWallItem.start, { x: standedPoint.x, y: standedPoint.y }) > 8){ // 没有再次选中当前内墙壁的起始点时取消当前内墙壁的绘制
                             
                             // if(isNewInSideWallUseful(insideWallItem.start, standedPoint)) {
                                 insideWallItem.end = { x: standedPoint.x, y: standedPoint.y }
@@ -215,7 +228,7 @@
                         let standedPoint = adjustPointPos(insideWallItem.start, { x: px, y: py})
                        
                         // console.log(isNewInSideWallUseful(insideWallItem.start, standedPoint))
-                        if(pointsDistance(insideWallItem.start, { x: standedPoint.x, y: standedPoint.y }) > 8){ // 没有再次选中当前内墙壁的起始点时取消当前内墙壁的绘制
+                        if(canInsertInsideWall && pointsDistance(insideWallItem.start, { x: standedPoint.x, y: standedPoint.y }) > 8){ // 没有再次选中当前内墙壁的起始点时取消当前内墙壁的绘制
                             
                             if(isNewInSideWallUseful(insideWallItem.start, standedPoint)) {
                                 insideWallItem.end = { x: standedPoint.x, y: standedPoint.y }
@@ -256,14 +269,15 @@
             if(!isSideFinished) return // 只有在外墙完成绘制后才能绘制窗户
             if(currentWin !== null) {
                 winData.push(currentWin)
-                addWinToSideWallData(currentWin)
+                // addWinToSideWallData(currentWin)
                 currentWin = null
             }
         }else if(currentType.type == 'door'){
             if(!isSideFinished) return // 只有在外墙完成绘制后才能绘制窗户
             if(currentDoor !== null) {
                 doorData.push(currentDoor)
-                addDoorToSideWallData(currentDoor)
+                // console.log(currentDoor)
+                // addDoorToSideWallData(currentDoor)
                 currentDoor = null
             }
         }
@@ -301,9 +315,12 @@
                 drawPoint(drawCtx, insideWallItem.start.x, insideWallItem.start.y) // 当前内墙壁的起点
                 let standedPoint = adjustPointPos(insideWallItem.start, { x: mx, y: my })
                 if(isNewInSideWallUseful(insideWallItem.start, standedPoint)){
+                    canInsertInsideWall = true
                     drawLine(drawCtx, insideWallItem.start, { x: mx, y: my }) // 辅助链接线
                     drawPoint(drawCtx, mx, my, true) // 鼠标移动处的红色标记
                     drawLine(drawCtx, standedPoint, insideWallItem.start, '#0000ff')
+                }else { // 当前不能插入内墙壁的数据
+                    canInsertInsideWall = false
                 }
                 // drawLine(drawCtx, insideWallItem.start, { x: mx, y: my }) // 辅助链接线
                 // drawPoint(drawCtx, mx, my, true) // 鼠标移动处的红色标记
@@ -319,7 +336,7 @@
                 result = isSelectInSideWall({x: mx, y: my})
             }
             
-            if(result.length > 0) { // 当前用户选中了一条外墙线段
+            if(result.length > 0) { // 用户选中了一段墙
                 drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
                 drawDataToScreen()
                 drawLine(drawCtx, sidewallData[0], sidewallData[sidewallData.length - 1])
@@ -341,13 +358,13 @@
                 parentWall = 'insideWall'
                 result = isSelectInSideWall({x: mx, y: my})
             }
-            if(result.length > 0) { // 当前用户选中了一条外墙线段
+            if(result.length > 0) { // 用户选中了一段墙
                 drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
                 drawDataToScreen()
                 drawLine(drawCtx, sidewallData[0], sidewallData[sidewallData.length - 1])
                 let insidePoint = getInLinePoint(...result)
                 drawDoor({x: insidePoint.x, y: insidePoint.y}, result[1], result[2], parentWall)
-            }else {
+            }else { // 用户没有选中墙
                 currentDoor = null
                 drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
                 drawDataToScreen()
@@ -366,8 +383,14 @@
         if(currentType.type == 'sidewall') { // 当前绘制外墙
             let lastPoint = sidewallData[sidewallData.length - 1]
             let firstPoint = sidewallData[0]
-            if(sidewallData.length > 0 && pointsDistance(lastPoint, { x: ux, y: uy }) < 16) { // 用户重复点击 
+            if(sidewallData.length > 0 && pointsDistance(lastPoint, { x: ux, y: uy }) < 8) { // 用户重复点击 
                 if(!isSideFinished) { // 执行退出当前编辑状态
+                    currentSidePoint = lastPoint
+                    if(sidewallData.length > 1) { // 并不是确定第一个点
+                        
+                        getIntoSidePointEdit() // 进入外墙壁节点编辑状态
+                    }
+                    
                     drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
                     drawDataToScreen()
                     isSideFinished = true
@@ -396,8 +419,6 @@
                 drawLine(drawCtx, lastPoint, firstPoint)
                 isSideFinished = true
             }
-        }else if(currentType.type == 'insidewall') {
-           
         }
 
         drawCanvas.removeEventListener('mousemove', handleMove)
@@ -434,9 +455,9 @@
     function drawDoorToScreen() { // 将门画到画布
         for(let i = 0;i < doorData.length;i++) {
             let door = doorData[i]
-            drawPoint(drawCtx, door.dp1.x, door.dp1.y, false, '#00ff00')
-            drawLine(drawCtx, door.dp1, door.dp2, '#00ff00')
-            drawPoint(drawCtx, door.dp2.x, door.dp2.y, false, '#00ff00')
+            drawPoint(drawCtx, door.dp1.x, door.dp1.y, false, '#ff0000')
+            drawLine(drawCtx, door.dp1, door.dp2, '#ff0000')
+            drawPoint(drawCtx, door.dp2.x, door.dp2.y, false, '#ff0000')
         }
     }
 
@@ -482,56 +503,221 @@
     }
 
     function drawWin(p, l1, l2, parentWall) { // 绘制窗户 主要用于用户在移动鼠标的时候作辅助提示 默认窗子的宽为 20/1m 
-        let len = 10
+        let len = 10/(WIDTH/HEIGHT)
         if(l1.x == l2.x) { // 窗户在垂直的墙面上
-            if(p.y + 6 <= Math.max(l1.y, l2.y) && !isCrashOtherWinOrDoor(p, {x: p.x, y: p.y + len})) { // 向上画窗户
+            if(p.y + len <= Math.max(l1.y, l2.y) && !isCrashOtherWinOrDoor(p, {x: p.x, y: p.y + len})) { // 向上画窗户
+                let connentResult = judgeConnectWin(p, {x: p.x, y: p.y + len}, 'up', len)
+               
                 drawPoint(drawCtx, p.x, p.y, false, '#0000ff')
                 drawPoint(drawCtx, p.x, p.y + len, false, '#0000ff')
-                currentWin = { wp1: p, wp2: {x: p.x, y: p.y + len}, l1, l2, parentWall}
-            }else if(p.y - 6 >= Math.min(l1.y, l2.y) && !isCrashOtherWinOrDoor(p, {x: p.x, y: p.y - len})) { // 向下画窗户
+                if(connentResult.length > 0) {
+                    if(l1.y > l2.y) {
+                        currentWin = { wp1: connentResult[1], wp2: connentResult[0], l1, l2, parentWall }
+                    }else {
+                        currentWin = { wp1: connentResult[0], wp2: connentResult[1], l1, l2, parentWall }
+                    }
+                }else {
+                    if(l1.y > l2.y) {
+                        currentWin = { wp1: {x: p.x, y: p.y + len}, wp2: p, l1, l2, parentWall }
+                    }else {
+                        currentWin = { wp1: p, wp2: {x: p.x, y: p.y + len}, l1, l2, parentWall }
+                    }
+                }
+            }else if(p.y - len >= Math.min(l1.y, l2.y) && !isCrashOtherWinOrDoor(p, {x: p.x, y: p.y - len})) { // 向下画窗户
+                let connentResult = judgeConnectWin(p, {x: p.x, y: p.y - len}, 'down', len)
                 drawPoint(drawCtx, p.x, p.y, false, '#0000ff')
                 drawPoint(drawCtx, p.x, p.y - len, false, '#0000ff')
-                currentWin = { wp1: p, wp2: {x: p.x, y: p.y - len}, l1, l2, parentWall }
+                if(connentResult.length > 0) {
+                    if(l1.y > l2.y) {
+                        currentWin = { wp1: connentResult[0], wp2: connentResult[1], l1, l2, parentWall }
+                    }else {
+                        currentWin = { wp1: connentResult[1], wp2: connentResult[0], l1, l2, parentWall }
+                    }
+                }else {
+                    if(l1.y > l2.y) {
+                        currentWin = { wp1: p, wp2: {x: p.x, y: p.y - len}, l1, l2, parentWall }
+                    }else {
+                        currentWin = { wp1: {x: p.x, y: p.y - len}, wp2: p, l1, l2, parentWall }
+                    }
+                }
             }
         }else{ // 窗户在水平的墙面上
-            if(p.x + 6 <= Math.max(l1.x, l2.x) && !isCrashOtherWinOrDoor(p, {x: p.x + len, y: p.y})) { // 向左画窗户
+            if(p.x + len <= Math.max(l1.x, l2.x) && !isCrashOtherWinOrDoor(p, {x: p.x + len, y: p.y})) { // 向左画窗户
+                let connentResult = judgeConnectWin(p, {x: p.x + len, y: p.y}, 'right', len)
                 drawPoint(drawCtx, p.x, p.y, false, '#0000ff')
                 drawPoint(drawCtx, p.x + len, p.y, false, '#0000ff')
-                currentWin = { wp1: p, wp2: {x: p.x + len, y: p.y}, l1, l2, parentWall }
-            }else if(p.x - 6 >= Math.min(l1.x, l2.x) && !isCrashOtherWinOrDoor(p, {x: p.x - len, y: p.y})) { // 向右画窗户
+                if(connentResult.length > 0) {
+                    if(l1.x > l2.x) {
+                        currentWin = { wp1: connentResult[1], wp2: connentResult[0], l1, l2, parentWall }
+                    }else {
+                        currentWin = { wp1: connentResult[0], wp2: connentResult[1], l1, l2, parentWall }
+                    }
+                }else{
+                    if(l1.x > l2.x) {
+                        currentWin = { wp1: {x: p.x + len, y: p.y}, wp2: p, l1, l2, parentWall }
+                    }else {
+                        currentWin = { wp1: p, wp2: {x: p.x + len, y: p.y}, l1, l2, parentWall }
+                    }
+                }
+            }else if(p.x - len >= Math.min(l1.x, l2.x) && !isCrashOtherWinOrDoor(p, {x: p.x - len, y: p.y})) { // 向右画窗户
+                let connentResult = judgeConnectWin(p, {x: p.x - len, y: p.y}, 'left', len)
                 drawPoint(drawCtx, p.x, p.y, false, '#0000ff')
                 drawPoint(drawCtx, p.x - len, p.y, false, '#0000ff')
-                currentWin = { wp1: p, wp2: {x: p.x - len, y: p.y}, l1, l2, parentWall }
+                if(connentResult.length > 0) {
+                    if(l1.x > l2.x) {
+                        currentWin = { wp1: connentResult[0], wp2: connentResult[1], l1, l2, parentWall }
+                    }else {
+                        currentWin = { wp1: connentResult[1], wp2: connentResult[0], l1, l2, parentWall }
+                    }
+                }else{
+                    if(l1.x > l2.x) {
+                        currentWin = { wp1: p, wp2: {x: p.x + len, y: p.y}, l1, l2, parentWall }
+                    }else {
+                        currentWin = { wp1: {x: p.x + len, y: p.y}, wp2: p, l1, l2, parentWall }
+                    }
+                }
             }
         }
     }
 
-    function drawDoor(p, l1, l2, parentWall) {
-        let len = 10
-        if(l1.x == l2.x) { // 窗户在垂直的墙面上
-            if(p.y + 6 <= Math.max(l1.y, l2.y) && !isCrashOtherWinOrDoor(p, {x: p.x, y: p.y + len})) { // 向上画窗户
-                drawPoint(drawCtx, p.x, p.y, false, '#00ff00')
-                drawPoint(drawCtx, p.x, p.y + len, false, '#00ff00')
-                currentDoor = { dp1: p, dp2: {x: p.x, y: p.y + len}, l1, l2, parentWall }
-            }else if(p.y - 6 >= Math.min(l1.y, l2.y) && !isCrashOtherWinOrDoor(p, {x: p.x, y: p.y - len})) { // 向下画窗户
-                drawPoint(drawCtx, p.x, p.y, false, '#00ff00')
-                drawPoint(drawCtx, p.x, p.y - len, false, '#00ff00')
-                currentDoor = { dp1: p, dp2: {x: p.x, y: p.y - len}, l1, l2, parentWall }
+    function drawDoor(p, l1, l2, parentWall) { // 绘制门
+        let len = 10/(WIDTH/HEIGHT)
+        if(l1.x == l2.x) { // 在垂直的墙面上
+            if(p.y + len <= Math.max(l1.y, l2.y) && !isCrashOtherWinOrDoor(p, {x: p.x, y: p.y + len})) { // 向上画
+                let connentResult = judgeConnectDoor(p, {x: p.x, y: p.y + len}, 'up', len)
+                drawPoint(drawCtx, p.x, p.y, false, '#ff0000')
+                drawPoint(drawCtx, p.x, p.y + len, false, '#ff0000')
+                if(connentResult.length > 0) {
+                    if(l1.y > l2.y) {
+                        currentDoor = { dp1: connentResult[1], dp2: connentResult[0], l1, l2, parentWall }
+                    }else {
+                        currentDoor = { dp1: connentResult[0], dp2: connentResult[1], l1, l2, parentWall }
+                    }
+                }else {
+                    if(l1.y > l2.y) {
+                        currentDoor = { dp1: {x: p.x, y: p.y + len}, dp2: p, l1, l2, parentWall }
+                    }else {
+                        currentDoor = { dp1: p, dp2: {x: p.x, y: p.y + len}, l1, l2, parentWall }
+                    }
+                }
+            }else if(p.y - len >= Math.min(l1.y, l2.y) && !isCrashOtherWinOrDoor(p, {x: p.x, y: p.y - len})) { // 向下画
+                let connentResult = judgeConnectDoor(p, {x: p.x, y: p.y - len}, 'down', len)
+                drawPoint(drawCtx, p.x, p.y, false, '#ff0000')
+                drawPoint(drawCtx, p.x, p.y - len, false, '#ff0000')
+                if(connentResult.length > 0) {
+                    if(l1.y > l2.y) {
+                        currentDoor = { dp1: connentResult[0], dp2: connentResult[1], l1, l2, parentWall }
+                    }else {
+                        currentDoor = { dp1: connentResult[1], dp2: connentResult[0], l1, l2, parentWall }
+                    }
+                }else {
+                    if(l1.y > l2.y) {
+                        currentDoor = { dp1: p, dp2: {x: p.x, y: p.y - len}, l1, l2, parentWall }
+                    }else {
+                        currentDoor = { dp1: {x: p.x, y: p.y - len}, dp2: p, l1, l2, parentWall }
+                    }
+                }
             }
-        }else{ // 窗户在水平的墙面上
-            if(p.x + 6 <= Math.max(l1.x, l2.x) && !isCrashOtherWinOrDoor(p, {x: p.x + len, y: p.y})) { // 向左画窗户
-                drawPoint(drawCtx, p.x, p.y, false, '#00ff00')
-                drawPoint(drawCtx, p.x + len, p.y, false, '#00ff00')
-                currentDoor = { dp1: p, dp2: {x: p.x + len, y: p.y}, l1, l2, parentWall }
-            }else if(p.x - 6 >= Math.min(l1.x, l2.x) && !isCrashOtherWinOrDoor(p, {x: p.x - len, y: p.y})) { // 向右画窗户
-                drawPoint(drawCtx, p.x, p.y, false, '#00ff00')
-                drawPoint(drawCtx, p.x - len, p.y, false, '#00ff00')
-                currentDoor = { dp1: p, dp2: {x: p.x - len, y: p.y}, l1, l2, parentWall }
+        }else{ // 在的水平墙面上
+            if(p.x + len <= Math.max(l1.x, l2.x) && !isCrashOtherWinOrDoor(p, {x: p.x + len, y: p.y})) { // 向左画
+                let connentResult = judgeConnectDoor(p, {x: p.x + len, y: p.y}, 'right', len)
+                drawPoint(drawCtx, p.x, p.y, false, '#ff0000')
+                drawPoint(drawCtx, p.x + len, p.y, false, '#ff0000')
+                if(connentResult.length > 0) {
+                    if(l1.x > l2.x) {
+                        currentDoor = { dp1: connentResult[1], dp2: connentResult[0], l1, l2, parentWall }
+                    }else {
+                        currentDoor = { dp1: connentResult[0], dp2: connentResult[1], l1, l2, parentWall }
+                    }
+                }else{
+                    if(l1.x > l2.x) {
+                        currentDoor = { dp1: {x: p.x + len, y: p.y}, dp2: p, l1, l2, parentWall }
+                    }else {
+                        currentDoor = { dp1: p, dp2: {x: p.x + len, y: p.y}, l1, l2, parentWall }
+                    }
+                }
+                
+            }else if(p.x - len >= Math.min(l1.x, l2.x) && !isCrashOtherWinOrDoor(p, {x: p.x - len, y: p.y})) { // 向右画
+                let connentResult = judgeConnectDoor(p, {x: p.x - len, y: p.y}, 'left', len)
+                drawPoint(drawCtx, p.x, p.y, false, '#ff0000')
+                drawPoint(drawCtx, p.x - len, p.y, false, '#ff0000')
+                if(connentResult.length > 0) {
+                    if(l1.x > l2.x) {
+                        currentDoor = { dp1: connentResult[0], dp2: connentResult[1], l1, l2, parentWall }
+                    }else {
+                        currentDoor = { dp1: connentResult[1], dp2: connentResult[0], l1, l2, parentWall }
+                    }
+                }else{
+                    if(l1.x > l2.x) {
+                        currentDoor = { dp1: p, dp2: {x: p.x - len, y: p.y}, l1, l2, parentWall }
+                    }else {
+                        currentDoor = { dp1: {x: p.x - len, y: p.y}, dp2: p, l1, l2, parentWall }
+                    }
+                }
             }
         }
     }
 
-    function isCrashOtherWinOrDoor(p1, p2) { // 与其他的窗户和门之间是否会发生碰撞 p1-p2 表示
+    function getIntoSidePointEdit() { // 进入外墙壁节点编辑状态
+        let htmlNodes = document.querySelectorAll('.sideEdit')
+        htmlNodes.forEach(e => e.style.display = 'block')
+        let lenInput = document.getElementById('sideWallLen')
+        let lastPoint = sidewallData[sidewallData.length - 1]
+        let prePoint = sidewallData[sidewallData.length - 2]
+        if(lastPoint.x == prePoint.x){ // 当前的墙壁垂直
+            lenInput.value = Math.abs(lastPoint.y - prePoint.y)
+        }else if(lastPoint.y == prePoint.y) { // 当前的墙壁水平
+            lenInput.value = Math.abs(lastPoint.x - prePoint.x)
+        }
+    }
+
+    function quitSidePointEdit() { // 取消外墙壁节点编辑状态
+        let htmlNodes = document.querySelectorAll('.sideEdit')
+        htmlNodes.forEach(e => e.style.display = 'none')
+    }
+
+    function setCurrentSideWallLen() { // 通过当前外墙壁的节点来设置当前外墙壁的长度
+        
+        let value = document.getElementById('sideWallLen').value // 当前输入框中表示的外墙壁节点的长度
+        if(value !== ''){
+            let lastPoint = sidewallData[sidewallData.length - 1] // 当前的外墙壁节点 也是目前的最后一个外墙壁的节点
+            let prePoint = sidewallData[sidewallData.length - 2]
+            let len = JSON.parse(value) // 当前这一段外墙壁的长度
+            if(len < 0) return // 若设置墙壁的长度小于零 那么认为当前设置墙壁长度的操作是无效的 
+            if(lastPoint.x == prePoint.x){ // 当前的墙壁垂直
+               
+                if(lastPoint.y > prePoint.y) { // 当前点在前面一个点的下面
+                    lastPoint.y = prePoint.y + len
+                }else { // 当前点在前面一个点的上面
+                    lastPoint.y = prePoint.y - len
+                }
+            }else if(lastPoint.y == prePoint.y) { // 当前的墙壁水平
+               
+                if(lastPoint.x > prePoint.x) { // 当前点在前一个点的右边
+                    lastPoint.x = prePoint.x + len
+                }else { // 当前点在前一个点的左边
+                    lastPoint.x = prePoint.x - len
+                }
+            }
+            drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
+            drawDataToScreen()
+        }else {
+            console.log('enpty')
+        }
+        
+    }
+
+    function deleteSidePoint() { // 删除当前的外墙壁的节点 同时也是当前外墙壁中的最后一个节点
+        sidewallData.pop()
+        if(sidewallData.length > 0) {
+            currentSidePoint = sidewallData[sidewallData.length - 1]
+        }
+        drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
+        drawDataToScreen()
+        quitSidePointEdit()
+    }
+
+    function isCrashOtherWinOrDoor(p1, p2) { // 与其他的窗户和门之间是否会发生碰撞 p1-p2 表示一扇门或是一扇窗
         for(let i = 0;i< winData.length;i++) {
             let win = winData[i]
             if(p1.x == p2.x && win.wp1.x == win.wp2.x && p1.x == win.wp1.x) { // 垂直
@@ -564,6 +750,144 @@
             }
         }
         return false // 没有发生碰撞
+    }
+
+    function judgeConnectWin(p1, p2, dir, len) { // 判断是否要与其他的窗户连接 参数 dir 表示 p1-p2 的方向
+        for(let i = 0;i< winData.length;i++) {
+            let win = winData[i]
+            if(p1.x == p2.x && win.wp1.x == win.wp2.x && p1.x == win.wp1.x) { // 垂直
+                if(dir == 'up') { // p1.y < p2.y
+                    if(win.wp1.y < win.wp2.y) {
+                        if(Math.abs(p2.y - win.wp1.y) < 8) {
+                            return [ { x: p1.x, y: win.wp1.y - len }, { x: p1.x, y: win.wp1.y } ]
+                        }else if(Math.abs(p1.y - win.wp2.y) < 8) {
+                            return [ { x: p1.x, y: win.wp2.y }, { x: p1.x, y: win.wp2.y + len } ]
+                        }
+                    }else{
+                        if(Math.abs(p2.y - win.wp2.y) < 8) {
+                            return [ { x: p1.x, y: win.wp2.y - len }, { x: p1.x, y: win.wp2.y } ]
+                        }else if(Math.abs(p1.y - win.wp1.y) < 8) {
+                            return [ { x: p1.x, y: win.wp1.y }, { x: p1.x, y: win.wp1.y + len } ]
+                        }
+                    }
+                }else if(dir == 'down'){ // p1.y > p2.y
+                    if(win.wp1.y < win.wp2.y) {
+                        if(Math.abs(p1.y - win.wp1.y) < 8) {
+                            return [ { x: p1.x, y: win.wp1.y }, { x: p1.x, y: win.wp1.y - len } ]
+                        }else if(Math.abs(p2.y - win.wp2.y) < 8) {
+                            return [ { x: p1.x, y: win.wp2.y + len }, { x: p1.x, y: win.wp2.y } ]
+                        }
+                    }else{
+                        if(Math.abs(p1.y - win.wp2.y) < 8) {
+                            return [ { x: p1.x, y: win.wp2.y }, { x: p1.x, y: win.wp2.y - len } ]
+                        }else if(Math.abs(p2.y - win.wp1.y) < 8) {
+                            return [ { x: p1.x, y: win.wp1.y + len }, { x: p1.x, y: win.wp1.y } ]
+                        }
+                    }
+                }
+            }
+            if(p1.y == p2.y && win.wp1.y == win.wp2.y && p1.y == win.wp1.y) { // 水平
+                if(dir == 'right') { // p1.x < p2.x
+                    if(win.wp1.x < win.wp2.x) {
+                        if(Math.abs(p1.x - win.wp2.x) < 8) {
+                            return [ { x: win.wp2.x, y: p1.y }, { x: win.wp2.x + len, y: p1.y } ]
+                        }else if(Math.abs(p2.x - win.wp1.x) < 8) {
+                            return [ { x: win.wp1.x - len, y: p1.y }, { x: win.wp1.x, y: p1.y } ]
+                        }
+                    }else{
+                        if(Math.abs(p1.x - win.wp1.x) < 8) {
+                            return [ { x: win.wp1.x, y: p1.y }, { x: win.wp1.x + len, y: p1.y } ]
+                        }else if(Math.abs(p2.x - win.wp2.x) < 8) {
+                            return [ { x: win.wp2.x - len, y: p1.y }, { x: win.wp2.x, y: p1.y } ]
+                        }
+                    }
+                }else if(dir == 'left') { // p1.x > p2.x
+                    if(win.wp1.x < win.wp2.x) {
+                        if(Math.abs(p2.x - win.wp2.x) < 8) {
+                            return [ { x: win.wp2.x + len, y: p1.y }, { x: win.wp2.x, y: p1.y } ]
+                        }else if(Math.abs(p1.x - win.wp1.x) < 8) {
+                            return [ { x: win.wp1.x, y: p1.y }, { x: win.wp1.x - len, y: p1.y } ]
+                        }
+                    }else{
+                        if(Math.abs(p1.x - win.wp2.x) < 8) {
+                            return [ { x: win.wp2.x, y: p1.y }, { x: win.wp1.x - len, y: p1.y } ]
+                        }else if(Math.abs(p2.x - win.wp1.x) < 8) {
+                            return [ { x: win.wp1.x + len, y: p1.y }, { x: win.wp1.x, y: p1.y } ]
+                        }
+                    }
+                }
+            }
+        } 
+        return []
+    }
+
+    function judgeConnectDoor(p1, p2, dir, len) { // 判断是否需要与其他的门连接 参数 dir 表示 p1-p2 的方向
+        for(let i = 0;i < doorData.length;i++) {
+            let door = doorData[i]
+            if(p1.x == p2.x && door.dp1.x == door.dp2.x && p1.x == door.dp1.x) { // 垂直
+                if(dir == 'up') { // p1.y < p2.y
+                    if(door.dp1.y < door.dp2.y) {
+                        if(Math.abs(p2.y - door.dp1.y) < 8) {
+                            return [ { x: p1.x, y: door.dp1.y - len }, { x: p1.x, y: door.dp1.y } ]
+                        }else if(Math.abs(p1.y - door.dp2.y) < 8) {
+                            return [ { x: p1.x, y: door.dp2.y }, { x: p1.x, y: door.dp2.y + len } ]
+                        }
+                    }else{
+                        if(Math.abs(p2.y - door.dp2.y) < 8) {
+                            return [ { x: p1.x, y: door.dp2.y - len }, { x: p1.x, y: door.dp2.y } ]
+                        }else if(Math.abs(p1.y - door.dp1.y) < 8) {
+                            return [ { x: p1.x, y: door.dp1.y }, { x: p1.x, y: door.dp1.y + len } ]
+                        }
+                    }
+                }else if(dir == 'down'){ // p1.y > p2.y
+                    if(door.dp1.y < door.dp2.y) {
+                        if(Math.abs(p1.y - door.dp1.y) < 8) {
+                            return [ { x: p1.x, y: door.dp1.y }, { x: p1.x, y: door.dp1.y - len } ]
+                        }else if(Math.abs(p2.y - door.dp2.y) < 8) {
+                            return [ { x: p1.x, y: door.dp2.y + len }, { x: p1.x, y: door.dp2.y } ]
+                        }
+                    }else{
+                        if(Math.abs(p1.y - door.dp2.y) < 8) {
+                            return [ { x: p1.x, y: door.dp2.y }, { x: p1.x, y: door.dp2.y - len } ]
+                        }else if(Math.abs(p2.y - door.dp1.y) < 8) {
+                            return [ { x: p1.x, y: door.dp1.y + len }, { x: p1.x, y: door.dp1.y } ]
+                        }
+                    }
+                }
+            }
+            if(p1.y == p2.y && door.dp1.y == door.dp2.y && p1.y == door.dp1.y) { // 水平
+                if(dir == 'right') { // p1.x < p2.x
+                    if(door.dp1.x < door.dp2.x) {
+                        if(Math.abs(p1.x - door.dp2.x) < 8) {
+                            return [ { x: door.dp2.x, y: p1.y }, { x: door.dp2.x + len, y: p1.y } ]
+                        }else if(Math.abs(p2.x - door.dp1.x) < 8) {
+                            return [ { x: door.dp1.x - len, y: p1.y }, { x: door.dp1.x, y: p1.y } ]
+                        }
+                    }else{
+                        if(Math.abs(p1.x - door.dp1.x) < 8) {
+                            return [ { x: door.dp1.x, y: p1.y }, { x: door.dp1.x + len, y: p1.y } ]
+                        }else if(Math.abs(p2.x - door.dp2.x) < 8) {
+                            return [ { x: door.dp2.x - len, y: p1.y }, { x: door.dp2.x, y: p1.y } ]
+                        }
+                    }
+                }else if(dir == 'left') { // p1.x > p2.x
+                    if(door.dp1.x < door.dp2.x) {
+                        if(Math.abs(p2.x - door.dp2.x) < 8) {
+                            return [ { x: door.dp2.x + len, y: p1.y }, { x: door.dp2.x, y: p1.y } ]
+                        }else if(Math.abs(p1.x - door.dp1.x) < 8) {
+                            return [ { x: door.dp1.x, y: p1.y }, { x: door.dp1.x - len, y: p1.y } ]
+                        }
+                    }else{
+                        if(Math.abs(p1.x - door.dp2.x) < 8) {
+                            return [ { x: door.dp2.x, y: p1.y }, { x: door.dp1.x - len, y: p1.y } ]
+                        }else if(Math.abs(p2.x - door.dp1.x) < 8) {
+                            return [ { x: door.dp1.x + len, y: p1.y }, { x: door.dp1.x, y: p1.y } ]
+                        }
+                    }
+                }
+            }
+        }
+        return []
     }
 
     function addWinToSideWallData(data) { // 将窗户的数据插入到墙壁的数据结构中 
@@ -603,8 +927,8 @@
                 JSON.stringify(data.l2) == JSON.stringify(wall.start)){
                     wall.children.push({ // 反面的窗户
                         type: 'win',
-                        start: { x: data.wp2.x, y: data.wp1.y },
-                        end: { x: data.wp1.x, y: data.wp2.y }
+                        start: { x: data.wp2.x, y: data.wp2.y },
+                        end: { x: data.wp1.x, y: data.wp1.y }
                     })
                 }
             }
@@ -613,7 +937,7 @@
     }
 
     function addDoorToSideWallData(data) {// 将门的数据插入到墙壁的数据结构中
-        if(data.parentWall == 'sideWall') {
+        if(data.parentWall == 'sideWall') { // 插入到外墙壁
             if(Math.min(sidewallData.indexOf(data.l1), sidewallData.indexOf(data.l2)) == 0 && 
             Math.max(sidewallData.indexOf(data.l1), sidewallData.indexOf(data.l2)) == sidewallData.length -1
             ) {
@@ -629,7 +953,7 @@
                     end: { x: data.dp2.x, y: data.dp2.y }
                 })
             }
-        }else { // insideWall
+        }else { // insideWall 插入到内墙壁
             for(let i = 0;i < insidewallData.length;i++) {
                 let wall = insidewallData[i]
                 if(JSON.stringify(data.l1) == JSON.stringify(wall.start) && 
@@ -645,10 +969,11 @@
                 let wall = insidewallData[i]
                 if(JSON.stringify(data.l1) == JSON.stringify(wall.end) && 
                 JSON.stringify(data.l2) == JSON.stringify(wall.start)){
+
                     wall.children.push({ // 反面的门
                         type: 'door',
-                        start: { x: data.dp2.x, y: data.dp1.y },
-                        end: { x: data.dp1.x, y: data.dp2.y }
+                        start: { x: data.dp2.x, y: data.dp2.y },
+                        end: { x: data.dp1.x, y: data.dp1.y }
                     })
                 }
             }
@@ -771,10 +1096,6 @@
             Math.max(p3.x, p4.x) > p1.x &&
             Math.min(p3.x, p4.x) < p1.x
             ) {
-                // console.log(p1, p2, p3, p4)
-                // console.log(11)
-                // console.log(Math.min(p1.y, p2.y) < p3.y)
-                // console.log(Math.min(p3.x, p4.x) < p1.x)
                 return true // cross
             }
             return false // no-cross
@@ -924,7 +1245,17 @@
         ctx.strokeStyle = '#000000'
     }
 
+    function combineData() { // 将窗户、门的数据合并到外墙壁和内墙壁的数据结构中
+        for(let i = 0;i < winData.length;i++) {
+            addWinToSideWallData(winData[i])
+        }
+        for(let i = 0;i < doorData.length;i++) {
+            addDoorToSideWallData(doorData[i])
+        }
+    }
+
     function outData() { // 输出当前制图的数据
+        combineData()
         let sideData = transformSideWall()
         let insideData = transformInSideWall()
         let groundData = transformGround()
@@ -1001,7 +1332,7 @@
             }
         }
         // return sidewall
-        // console.log(sidewall)
+        console.log(sidewall)
         return transformWalls(sidewall)
     }
 

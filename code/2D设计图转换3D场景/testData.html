@@ -48,8 +48,10 @@
        
         wallGroup.position.set(-housecenter.x, 0, -housecenter.z)
         scene.add(wallGroup)
+        console.log(wallGroup)
        
         function generateWall(wallData) {
+            
             let shape = new THREE.Shape() 
             shape.moveTo(wallData.start.x, wallData.start.y)
             for(let i = 0; i < wallData.path.length; i++) { // make path
@@ -80,7 +82,8 @@
                 mesh.position.copy(wallData.position)
                 mesh.rotation.x = wallData.rotation.x
                 mesh.rotation.y = wallData.rotation.y
-                mesh.type = item.type
+                mesh.userData.type = item.type
+                mesh.geometry.computeBoundingBox()
                 // scene.add(mesh)
                 wallGroup.add(mesh)
             }
@@ -91,8 +94,8 @@
             mesh.position.copy(wallData.position)
             mesh.rotation.x = wallData.rotation.x
             mesh.rotation.y = wallData.rotation.y
-            mesh.type = wallData.type
-
+            mesh.userData.type = wallData.type
+            mesh.geometry.computeBoundingBox()
             // scene.add(mesh)
             wallGroup.add(mesh)
         }
