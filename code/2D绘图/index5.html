@@ -80,7 +80,18 @@
                 <button onclick="deleteSelectWin()">delete select win</button>
             </div>
         </div>
-        <div class="btn" onclick="changeType('door')">door</div>
+        <div class="btn" onclick="changeType('door')">
+            door
+            <div class="doorEdit" style="display: none;">
+                toLeft: <input id="doorToLeft" type="number">
+                <button onclick="setSelectDoorPos('toLeft')">sure</button><br/>
+                toTop:<input id="doorToTop" type="number">
+                <button onclick="setSelectDoorPos('toTop')">sure</button>
+            </div>
+            <div class="doorEdit" style="display: none;">
+                <button onclick="deleteSelectDoor()">delete select door</button>
+            </div>
+        </div>
         <div class="btn" onclick="outData()" style="background-color: red">out data</div>
     </div>
     <div id="canWrap">
@@ -116,6 +127,7 @@
     let currentWin = null // 当前的窗户
     let selectedWin = null, selectedWinIndex = -1 // 当前选中的窗户
     let currentDoor = null// 当前的门
+    let selectedDoor = null, selectedDoorIndex = -1 // 当前选中的门
     let currentSidePoint = null // 当前选中的外墙壁的节点
 
     let sidewallData = [] // 记录绘画的点的位置 x - y - type
@@ -277,30 +289,36 @@
         }else if(currentType.type == 'win'){ // 绘制窗户
             if(!isSideFinished) return // 只有在外墙完成绘制后才能绘制窗户
             if(currentWin !== null) { // 当前存在有效的窗户对象
+               
                 winData.push(currentWin)
                 drawDataToScreen(true)
                 currentWin = null
             }else { // 目前并没有可供绘制的窗户
-                // console.log('在这里判断用户是否选中一个窗户')
-                
                 let result = isSelectWin(px, py)
                 if(result == null) return // 用户没有选中窗户 直接退出逻辑
-               
-                if(JSON.stringify(result) == JSON.stringify(selectedWin)){ // 选中与之前相同的一个窗户
+                if(JSON.stringify(result[0]) == JSON.stringify(selectedWin)){ // 选中与之前相同的一个窗户
                     hideWinEdit()
                 }else{ // 选中不同的窗户 或是之前没有选中窗户
                     showWinEdit(result[0], result[1])
                 }
-                
                 drawDataToScreen(true)
             }
         }else if(currentType.type == 'door'){
             if(!isSideFinished) return // 只有在外墙完成绘制后才能绘制窗户
             if(currentDoor !== null) {
+                
                 doorData.push(currentDoor)
+                drawDataToScreen(true)
                 currentDoor = null
             }else { // 目前并没有可供绘制的门
-                console.log('在这里判断用户是否选中一个门')
+                let result = isSelectDoor(px, py)
+                if(result == null) return // 用户没有选中门 直接退出逻辑
+                if(JSON.stringify(result[0]) == JSON.stringify(selectedDoor)){ // 选中与之前相同的一个门
+                    hideDoorEdit()
+                }else{ // 选中不同的门 或是之前没有选中门
+                    showDoorEdit(result[0], result[1])
+                }
+                drawDataToScreen(true)
             }
         }
         
@@ -427,6 +445,8 @@
                 drawDataToScreen(true)
                 isSideFinished = true
             }
+        }else if(currentType.type == 'insidewall') {
+            console.log(insidewallData)
         }
 
         drawCanvas.removeEventListener('mousemove', handleMove)
@@ -439,10 +459,13 @@
         doorData = []
         isSideFinished = false
         currentWin = null
+        currentDoor = null
         insideWallItem = null
         changeType('sidewall')
         drawCtx.clearRect(0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight)
     }
+
+    // --- Draw part start
 
     function drawDataToScreen(isClose = false) { // 将数据中的点画到画布上 isClose 是否需要当前的外墙壁闭合
         drawCtx.clearRect( 0, 0, drawCanvas.clientWidth, drawCanvas.clientHeight )
@@ -512,6 +535,15 @@
             ctx.fillStyle = '#000000'
             ctx.strokeStyle = '#000000'
         }
+    }
+
+    function drawLine(ctx, from, to, color = '#000000') { // 从指定的上下文中，根据传入的两个点的坐标画线
+        ctx.beginPath()
+        ctx.strokeStyle = color
+        ctx.moveTo(from.x, from.y)
+        ctx.lineTo(to.x, to.y)
+        ctx.stroke()
+        ctx.strokeStyle = '#000000'
     }
 
     function drawWin(p, l1, l2, parentWall) { // 绘制窗户 主要用于用户在移动鼠标的时候作辅助提示 默认窗子的宽为 20/1m 
@@ -723,8 +755,12 @@
                 }
             }
         }
-        currentWin = null // 当前的绘制存在冲突的时候 清除之前的对象
+        currentDoor = null // 当前的绘制存在冲突的时候 清除之前的对象
     }
+
+    // --- Draw part end
+
+    // --- Edit sideWall start
 
     function getIntoSidePointEdit() { // 进入外墙壁节点编辑状态
         let htmlNodes = document.querySelectorAll('.sideEdit')
@@ -783,6 +819,10 @@
         quitSidePointEdit()
     }
 
+    // --- Edit sideWall end
+
+    // --- Edit win start
+
     function isSelectWin(x, y) { // 判断用户是否选中了一个窗户 若选中则返回当前选中窗户对象的引用和排序
         let parentWall = 'sideWall'
         let selectResult = isSelectSideWall({x, y})
@@ -800,11 +840,9 @@
             let win = winData[i]
             if(win.parentWall == parentWall) {
                 if(p.x == win.wp1.x && p.x == win.wp2.x && p.y > Math.min(win.wp1.y, win.wp2.y) && p.y < Math.max(win.wp1.y, win.wp2.y)) {
-                    // winData.splice(i, 1)
                     return [win, i]
                 }
                 if(p.y == win.wp1.y && p.y == win.wp2.y && p.x > Math.min(win.wp1.x, win.wp2.x) && p.x < Math.max(win.wp1.x, win.wp2.x)) {
-                    // winData.splice(i, 1)
                     return [win, i]
                 }
             }
@@ -846,35 +884,223 @@
     function setSelectWinPos(dir) { // 调整当前选中的窗户的位置
         if(selectedWin == null) return // 若当前没有选中的窗户 那么就结束方法
         if(dir == 'toLeft' && selectedWin.wp1.y == selectedWin.wp2.y) { // toLeft winToLeft 水平
-            let value = document.getElementById('winToLeft').value
-            if(value !== '') {
-                
+            let input = document.getElementById('winToLeft')
+            if(input.value !== '') {
+                let targetToLeft = JSON.parse(input.value)
+                let currentToLeft = Math.min(selectedWin.wp1.x, selectedWin.wp2.x) - Math.min(selectedWin.l1.x, selectedWin.l2.x)
+                let wp1x = selectedWin.wp1.x + (targetToLeft - currentToLeft) // 同时水平移动后的位置
+                let wp2x = selectedWin.wp2.x + (targetToLeft - currentToLeft)
+                let f = isCrashOtherWinOrDoor( 
+                        {
+                            x: wp1x, 
+                            y: selectedWin.wp1.y
+                        },
+                            {
+                            x: wp2x,
+                            y: selectedWin.wp2.y
+                        },true,
+                        selectedWin.wp1,
+                        selectedWin.wp2)
+                if(targetToLeft < 0 || f || 
+                    Math.min(selectedWin.l1.x, selectedWin.l2.x) > Math.min(wp1x, wp2x) || 
+                    Math.max(selectedWin.l1.x, selectedWin.l2.x) < Math.max(wp1x, wp2x)) {
+                    input.value = currentToLeft
+                    return
+                }else{
+                    selectedWin.wp1.x += (targetToLeft - currentToLeft)
+                    selectedWin.wp2.x += (targetToLeft - currentToLeft)
+                    drawDataToScreen(true)
+                }
             }
         }else if(dir == 'toTop' && selectedWin.wp1.x == selectedWin.wp2.x){ // toTop winToTop 垂直
-            let value = document.getElementById('winToTop').value
-            if(value !== '') {
-                
+            let input = document.getElementById('winToTop')
+            if(input.value !== '') {
+                let targetToTop = JSON.parse(input.value)
+                let currentToTop = Math.min(selectedWin.wp1.y, selectedWin.wp2.y) -  Math.min(selectedWin.l1.y, selectedWin.l2.y)
+                let wp1y = selectedWin.wp1.y + (targetToTop - currentToTop) // 同时水平移动后的位置
+                let wp2y = selectedWin.wp2.y + (targetToTop - currentToTop)
+                let f = isCrashOtherWinOrDoor( 
+                        {
+                            x: selectedWin.wp1.x, 
+                            y: wp1y
+                        },
+                            {
+                            x: selectedWin.wp2.x,
+                            y: wp2y
+                        },true,
+                        selectedWin.wp1,
+                        selectedWin.wp2)
+                if(targetToTop < 0 || f || 
+                    Math.min(selectedWin.l1.y, selectedWin.l2.y) > Math.min(wp1y, wp2y) || 
+                    Math.max(selectedWin.l1.y, selectedWin.l2.y) < Math.max(wp1y, wp2y)) {
+                    input.value = currentToTop
+                    return
+                }else{
+                    selectedWin.wp1.y += (targetToTop - currentToTop)
+                    selectedWin.wp2.y += (targetToTop - currentToTop)
+                    drawDataToScreen(true)
+                }
             }
         }
     }
 
-    function isSelectedDoor(x, y) { // 判断用户是否选中了一个门 若选中则从当前的门数据中取出这个门用来操作
+    // --- Edit win end
 
+    // --- Edit door start
+
+    function isSelectDoor(x, y) { // 判断用户是否选中了一个门 若选中则从当前的门数据中取出这个门用来操作
+        let parentWall = 'sideWall'
+        let selectResult = isSelectSideWall({x, y})
+        if(selectResult.length == 0){ // 如果用户没有选中外墙壁
+            parentWall = 'insideWall'
+            selectResult = isSelectInSideWall({x, y})
+            if(selectResult.length == 0) { // 如果用户还没有选中内墙壁
+                return null // 用户没有选中门
+            }
+        }
+        let [p, l1, l2] = selectResult
+        p = getInLinePoint(...selectResult) // 得到对应在墙壁上的点
+        
+        for(let i = 0;i < doorData.length;i++) {
+            let door = doorData[i]
+            if(door.parentWall == parentWall) {
+                if(p.x == door.dp1.x && p.x == door.dp2.x && p.y > Math.min(door.dp1.y, door.dp2.y) && p.y < Math.max(door.dp1.y, door.dp2.y)) {
+                    return [door, i]
+                }
+                if(p.y == door.dp1.y && p.y == door.dp2.y && p.x > Math.min(door.dp1.x, door.dp2.x) && p.x < Math.max(door.dp1.x, door.dp2.x)) {
+                    return [door, i]
+                }
+            }
+        }
+        
+        return null // 用户没有选中窗户
     }
 
-    function isCrashOtherWinOrDoor(p1, p2) { // 与其他的窗户和门之间是否会发生碰撞 p1-p2 表示一扇门或是一扇窗
+    function showDoorEdit(result, index) { // 打门编辑面板
+        let htmlNodes = document.querySelectorAll('.doorEdit')
+        htmlNodes.forEach(e => e.style.display = 'block')
+        selectedDoor = result
+        selectedDoorIndex = index
+        let toLeftInput = document.getElementById('doorToLeft')
+        let toTopInput = document.getElementById('doorToTop')
+        if(result.dp1.x == result.dp2.x) { // 窗户垂直
+            toLeftInput.value = 0 // 垂直窗户无法水平移动
+            toTopInput.value = Math.min(result.dp1.y, result.dp2.y) -  Math.min(result.l1.y, result.l2.y)
+        }else{ // 窗户水平
+            toTopInput.value = 0 // 水平窗户无法垂直移动
+            toLeftInput.value = Math.min(result.dp1.x, result.dp2.x) - Math.min(result.l1.x, result.l2.x)
+        }
+    }
+
+    function hideDoorEdit(){ // 关闭门编辑面板
+        let htmlNodes = document.querySelectorAll('.doorEdit')
+        htmlNodes.forEach(e => e.style.display = 'none')
+        selectedDoor = null
+        selectedDoorIndex = -1
+    }
+
+    function deleteSelectDoor() {  // 删除当前选中的门
+        if(selectedDoorIndex == -1) return // 当前没有选中的门
+        doorData.splice(selectedDoorIndex, 1)
+        drawDataToScreen(true)
+        hideDoorEdit()
+    }
+
+    function setSelectDoorPos(dir) { // 调整当前选中的门的位置
+        if(selectedDoor == null) return // 若当前没有选中的窗户 那么就结束方法
+        if(dir == 'toLeft' && selectedDoor.dp1.y == selectedDoor.dp2.y) { // toLeft doorToLeft 水平
+            let input = document.getElementById('doorToLeft')
+            if(input.value !== '') {
+                let targetToLeft = JSON.parse(input.value)
+                let currentToLeft = Math.min(selectedDoor.dp1.x, selectedDoor.dp2.x) - Math.min(selectedDoor.l1.x, selectedDoor.l2.x)
+                let dp1x = selectedDoor.dp1.x + (targetToLeft - currentToLeft) // 同时水平移动后的位置
+                let dp2x = selectedDoor.dp2.x + (targetToLeft - currentToLeft)
+                let f = isCrashOtherWinOrDoor( 
+                        {
+                            x: dp1x, 
+                            y: selectedDoor.dp1.y
+                        },
+                            {
+                            x: dp2x,
+                            y: selectedDoor.dp2.y
+                        },true,
+                        selectedDoor.dp1,
+                        selectedDoor.dp2)
+                if(targetToLeft < 0 || f || 
+                    Math.min(selectedDoor.l1.x, selectedDoor.l2.x) > Math.min(dp1x, dp2x) || 
+                    Math.max(selectedDoor.l1.x, selectedDoor.l2.x) < Math.max(dp1x, dp2x)) {
+                    input.value = currentToLeft
+                    return
+                }else{
+                    selectedDoor.dp1.x += (targetToLeft - currentToLeft)
+                    selectedDoor.dp2.x += (targetToLeft - currentToLeft)
+                    drawDataToScreen(true)
+                }
+            }
+        }else if(dir == 'toTop' && selectedDoor.dp1.x == selectedDoor.dp2.x){ // toTop doorToTop 垂直
+            let input = document.getElementById('doorToTop')
+            if(input.value !== '') {
+                let targetToTop = JSON.parse(input.value)
+                let currentToTop = Math.min(selectedDoor.dp1.y, selectedDoor.dp2.y) -  Math.min(selectedDoor.l1.y, selectedDoor.l2.y)
+                let dp1y = selectedDoor.dp1.y + (targetToTop - currentToTop) // 同时水平移动后的位置
+                let dp2y = selectedDoor.dp2.y + (targetToTop - currentToTop)
+                let f = isCrashOtherWinOrDoor( 
+                        {
+                            x: selectedDoor.dp1.x, 
+                            y: dp1y
+                        },
+                            {
+                            x: selectedDoor.dp2.x,
+                            y: dp2y
+                        },true,
+                        selectedDoor.dp1,
+                        selectedDoor.dp2)
+                if(targetToTop < 0 || f || 
+                    Math.min(selectedDoor.l1.y, selectedDoor.l2.y) > Math.min(dp1y, dp2y) || 
+                    Math.max(selectedDoor.l1.y, selectedDoor.l2.y) < Math.max(dp1y, dp2y)) {
+                    input.value = currentToTop
+                    return
+                }else{
+                    selectedDoor.dp1.y += (targetToTop - currentToTop)
+                    selectedDoor.dp2.y += (targetToTop - currentToTop)
+                    drawDataToScreen(true)
+                }
+            }
+        }
+    }
+
+    // --- Edit door end
+
+    function isCrashOtherWinOrDoor(p1, p2, isSetPosition = false, lp1=undefined, lp2=undefined) { // 与其他的窗户和门之间是否会发生碰撞 p1-p2 表示一扇门或是一扇窗
         for(let i = 0;i< winData.length;i++) {
             let win = winData[i]
             if(p1.x == p2.x && win.wp1.x == win.wp2.x && p1.x == win.wp1.x) { // 垂直
                 if((Math.abs(p1.y - p2.y) + Math.abs(win.wp1.y - win.wp2.y)) > 
                 (Math.max(p1.y,p2.y,win.wp1.y,win.wp2.y) - Math.min(p1.y,p2.y,win.wp1.y,win.wp2.y)) ) { // 有重叠部分
-                    return true // 发生碰撞
+                    if(isSetPosition) {
+                        if(Math.min(lp1.y, lp2.y) == Math.min(win.wp1.y, win.wp2.y) &&
+                            Math.max(lp1.y, lp2.y) == Math.max(win.wp1.y, win.wp2.y)) {
+                                // continue
+                        }else{
+                            return true // 发生碰撞
+                        }
+                    }else{
+                        return true // 发生碰撞
+                    }
                 }
             }
             if(p1.y == p2.y && win.wp1.y == win.wp2.y && p1.y == win.wp1.y) { // 水平
                 if((Math.abs(p1.x - p2.x) + Math.abs(win.wp1.x - win.wp2.x)) > 
                 (Math.max(p1.x,p2.x,win.wp1.x,win.wp2.x) - Math.min(p1.x,p2.x,win.wp1.x,win.wp2.x)) ) { // 有重叠部分
-                    return true // 发生碰撞
+                    if(isSetPosition) {
+                        if(Math.min(lp1.x, lp2.x) == Math.min(win.wp1.x, win.wp2.x) &&
+                            Math.max(lp1.x, lp2.x) == Math.max(win.wp1.x, win.wp2.x)) {
+                        }else{
+                            return true // 发生碰撞
+                        }
+                    }else{
+                        return true // 发生碰撞
+                    }
                 }
             }
         } 
@@ -884,13 +1110,31 @@
             if(p1.x == p2.x && door.dp1.x == door.dp2.x && p1.x == door.dp1.x) { // 垂直
                 if((Math.abs(p1.y - p2.y) + Math.abs(door.dp1.y - door.dp2.y)) > 
                 (Math.max(p1.y,p2.y,door.dp1.y,door.dp2.y) - Math.min(p1.y,p2.y,door.dp1.y,door.dp2.y)) ) { // 有重叠部分
-                    return true // 发生碰撞
+                    // return true // 发生碰撞
+                    if(isSetPosition) {
+                        if(Math.min(lp1.y, lp2.y) == Math.min(door.dp1.y, door.dp2.y) &&
+                            Math.max(lp1.y, lp2.y) == Math.max(door.dp1.y, door.dp2.y)) {
+                        }else{
+                            return true // 发生碰撞
+                        }
+                    }else{
+                        return true // 发生碰撞
+                    }
                 }
             }
             if(p1.y == p2.y && door.dp1.y == door.dp2.y && p1.y == door.dp1.y) { // 水平
                 if((Math.abs(p1.x - p2.x) + Math.abs(door.dp1.x - door.dp2.x)) > 
                 (Math.max(p1.x,p2.x,door.dp1.x,door.dp2.x) - Math.min(p1.x,p2.x,door.dp1.x,door.dp2.x)) ) { // 有重叠部分
-                    return true // 发生碰撞
+                    // return true // 发生碰撞
+                    if(isSetPosition) {
+                        if(Math.min(lp1.x, lp2.x) == Math.min(door.dp1.x, door.dp2.x) &&
+                            Math.max(lp1.x, lp2.x) == Math.max(door.dp1.x, door.dp2.x)) {
+                        }else{
+                            return true // 发生碰撞
+                        }
+                    }else{
+                        return true // 发生碰撞
+                    }
                 }
             }
         }
@@ -1399,15 +1643,6 @@
             drawLine(bgctx, { x: 0, y: heightLen * j }, { x: bgwidth, y: heightLen * j } )
         }
         bgctx.globalAlpha = 1
-    }
-
-    function drawLine(ctx, from, to, color = '#000000') { // 从指定的上下文中，根据传入的两个点的坐标画线
-        ctx.beginPath()
-        ctx.strokeStyle = color
-        ctx.moveTo(from.x, from.y)
-        ctx.lineTo(to.x, to.y)
-        ctx.stroke()
-        ctx.strokeStyle = '#000000'
     }
 
     function combineData() { // 将窗户、门的数据合并到外墙壁和内墙壁的数据结构中
