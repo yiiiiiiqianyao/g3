@@ -52,7 +52,7 @@
         
        
         function generateWall(wallData) {
-            let s = true // true - false
+            let s = false // true - false
             let shape = new THREE.Shape() 
             shape.moveTo(wallData.start.x, wallData.start.y)
             for(let i = 0; i < wallData.path.length; i++) { // make path
