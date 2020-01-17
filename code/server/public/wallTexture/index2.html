@@ -10,13 +10,6 @@
     <script src="../src/common/utils.js"></script>
     <script src="../src/common/math.js"></script>
 
-    <script src="../src/libs/EffectComposer.js"></script>
-    <script src="../src/libs/RenderPass.js"></script>
-    <script src="../src/libs/ShaderPass.js"></script>
-    <script src="../src/libs/CopyShader.js"></script>
-
-    <script src="../src/libs/OutlinePass.js"></script>
-
     <!-- 加载构建基础房间需要的数据 -->
     <script src="./data.js"></script>
     <script src="./poolData.js"></script>
@@ -69,10 +62,9 @@
     let textures = {} // 存储所有的材质贴图
     let selectedObj = [] // 当前选中的房屋部件 如果用户选择在内墙壁上的门窗的话同时会选中两个，所以用数组来记录
     let currentType = 'door' // 当前的纹理类型
-let mesh
+    
     init() // 初始化场景操作
     initRoom() // 初始化构建房屋
-    initOutLine()
     initTextureList()
     renderScene()
     
@@ -85,20 +77,36 @@ let mesh
         let intersects = getSelectedMeshes(coords, camera, canBeSelectedObj)
         if(intersects.length > 0) {
             let type = intersects[0].object.userData.type
+            let item = intersects[0].object
+            // console.log(item)
+            if(selectedObj.length > 0) {
+                selectedObj[0].userData.helpLine.visible = false
+            }
             if(type == 'sideWall' || type == 'insideWall'){
                 changeTextureList('wall')
-                selectedObj = [intersects[0].object]
+                selectedObj = [item]
             }else{
                 changeTextureList(type)
-                selectedObj = [intersects[0].object]
+                selectedObj = [item]
             }
-
-            OutlinePass.selectedObjects = selectedObj
+            if(item.userData.helpLine == undefined) {
+                let helpLine
+                if(item.userData.type == 'floor' || item.userData.type == 'roof'){
+                    helpLine = generateHelpLine(item.geometry.vertices, item.rotation, item.position, new THREE.Color(0xFF3030))
+                }else {
+                    helpLine = new THREE.BoxHelper(item, new THREE.Color(0xFF3030))
+                }
+                helpLine.material.depthTest = false
+                scene.add(helpLine)
+                item.userData.helpLine = helpLine
+            }else{
+                item.userData.helpLine.visible = true
+            }
         }
     }
 
-    function generateWall(wallData) {
-        // console.log(wallData)
+    function generateWall(wallData) { // 生成墙壁
+        
         let shape = new THREE.Shape() 
         shape.moveTo(wallData.start.x, wallData.start.y)
         for(let i = 0; i < wallData.path.length; i++) { // make path
@@ -123,7 +131,7 @@ let mesh
             // child.moveTo(item.start.x, item.start.y)
             child.moveTo(0, 0)
             for(let j = 0; j < item.path.length; j++) {
-                child.lineTo(item.path[j].x - item.start.x, item.path[j].y)
+                child.lineTo(item.path[j].x - item.start.x, item.path[j].y - item.start.y)
             }
             let geometry = new THREE.ShapeGeometry( child )
             let color = new THREE.Color( Math.random(), Math.random(), Math.random() )
@@ -131,7 +139,7 @@ let mesh
             let material = null
             if(item.type == 'door') { // sideWall
                 material = new THREE.MeshBasicMaterial({ 
-                    map: generateTexture('/src/images/room/door/2.jpg', 10, 20)
+                    map: generateTexture('/src/images/room/door/1.jpg', 10, 20)
                 }) 
             }else if(item.type == 'win'){
                 material = new THREE.MeshBasicMaterial({ 
@@ -146,7 +154,7 @@ let mesh
             mesh.rotation.x = wallData.rotation.x
             mesh.rotation.y = wallData.rotation.y
            
-            if(wallData.rotation.y == 0){
+            if(wallData.rotation.y == 0){ // 为了解决 shape 纹理坐标没有对齐
                 mesh.position.x += item.start.x
             }else if(wallData.rotation.y == -Math.PI/2){
                 mesh.position.z += item.start.x
@@ -154,6 +162,10 @@ let mesh
                 mesh.position.x -= item.start.x
             }else if(wallData.rotation.y == (-3*Math.PI/2)){
                 mesh.position.z -= item.start.x
+            }
+
+            if(item.type == 'win') { // 为了解决窗户的坐标问题
+                mesh.position.y += item.start.y
             }
             mesh.userData.type = item.type
             mesh.userData.parent = wallData.type
@@ -191,6 +203,24 @@ let mesh
         roomGroup.add(mesh)
     }
 
+    function generateHelpLine(points, rotation, position, color) { // 生成辅助线对象
+        let material = new THREE.LineBasicMaterial({ color })
+        let geometry = new THREE.Geometry()
+        geometry.vertices = points
+        let line = new THREE.Line( geometry, material )
+        line.position.copy(position)
+        line.rotation.y = rotation.y
+        line.rotation.x = rotation.x
+        let center = getObjectCenter(line)
+        if(rotation.x == -Math.PI/2) { // floor
+            line.position.set(-center.x, 0, center.z)
+        }else if(rotation.x == Math.PI/2) { // roof
+            line.position.set(-center.x, 30, -center.z)
+        }
+        
+        return line
+    }
+
     function init() { // 初始化场景操作
         scene = new THREE.Scene()
         camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
@@ -222,39 +252,6 @@ let mesh
         let housecenter = getObjectCenter(roomGroup)
         roomGroup.position.set(-housecenter.x, 0, -housecenter.z)
         scene.add(roomGroup)
-    }
-
-    function initOutLine() {
-         // 创建一个渲染器通道，场景和相机作为参数
-        var renderPass = new THREE.RenderPass(scene, camera);
-        // 创建OutlinePass通道,显示外轮廓边框
-        OutlinePass = new THREE.OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
-        // 后处理完成，设置renderToScreen为true，后处理结果在Canvas画布上显示
-        OutlinePass.renderToScreen = true;
-
-        //设置要显示边框的网格模型
-        //交互的时候可以设置一个鼠标事件，点击选中了某个模型，就直接把某个网格模型作为值的元素
-        // OutlinePass.selectedObjects = [mesh]
-        OutlinePass.selectedObjects = []
-        // OutlinePass.selectedObjects = selectedObj
-
-        //OutlinePass相关属性设置
-        OutlinePass.visibleEdgeColor = new THREE.Color(1, 0, 0);    // 可视部分轮廓线
-        // OutlinePass.hiddenEdgeColor = new THREE.Color(0, 1, 0);  // 遮挡部分轮廓线
-        OutlinePass.hiddenEdgeColor = new THREE.Color(0,0,0)        // 遮挡轮廓线透明
-        OutlinePass.edgeGlow = 0.0;                                 // 轮廓线收缩扩大动效(轮廓线跳动幅度) 
-        OutlinePass.usePatternTexture = false;                      // 选中网格内容是否使用纹理进行填充
-        OutlinePass.edgeThickness = 1.0;
-        OutlinePass.edgeStrength = 3.0;
-        OutlinePass.downSampleRatio = 2;
-        OutlinePass.pulsePeriod = 0;                                // 轮廓线收缩扩大动效(轮廓线跳动频率)        
-
-        // 创建后处理对象EffectComposer，WebGL渲染器作为参数
-        composer = new THREE.EffectComposer(renderer);
-        // 设置renderPass通道
-        composer.addPass(renderPass);
-        // 设置OutlinePass通道
-        composer.addPass(OutlinePass);
     }
 
     function generateTexture(src, repeatX = 10, repeatY = 10) { // 生成对应的纹理
@@ -320,12 +317,9 @@ let mesh
             selectedObj[i].material.map = textures[e.target.uuid]
         }
     }
-
-
     
     function renderScene(){
-        // renderer.render(scene,camera)
-        composer.render()
+        renderer.render(scene,camera)
         requestAnimationFrame(renderScene)
     }
     window.onresize = onResize
